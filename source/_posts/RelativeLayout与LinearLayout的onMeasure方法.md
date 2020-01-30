@@ -2,7 +2,7 @@ title: RelativeLayout与LinearLayout的onMeasure方法
 date: 2019-4-5
 tags: [Android]
 categories: Android开发艺术探索
-description: Q：两次测绘与一次测绘是怎么实现的？
+description: 两次测绘与一次测绘是怎么实现的？
 ---
 转自： [Android中RelativeLayout和LinearLayout性能分析](https://www.jianshu.com/p/8a7d059da746)
 ## RelativeLayout的onMeasure()方法
