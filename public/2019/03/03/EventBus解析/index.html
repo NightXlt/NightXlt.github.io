@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Night">
+
+
+
+<meta name="keywords" content="Android,开源框架">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EventBus源码解析">
+<meta property="og:url" content="http://yoursite.com/2019/03/03/EventBus解析/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/eventbus_simple_resolve.png">
+<meta property="og:image" content="http://yoursite.com/images/eventbus_register.png">
+<meta property="og:image" content="http://yoursite.com/images/eventbus_post.png">
+<meta property="og:updated_time" content="2019-03-24T03:40:28.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EventBus源码解析">
+<meta name="twitter:image" content="http://yoursite.com/images/eventbus_simple_resolve.png">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>EventBus源码解析 | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android，消息机制/">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug调试/">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件体系/">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件分发/">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View的工作原理/">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件总线/">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/剑指Offer/">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字符串/">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字节跳动/">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开源框架/">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码解析/">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存/">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/腾讯/">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自定义View/">自定义View</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-EventBus解析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/03/03/EventBus解析/" class="article-date">
+      <time datetime="2019-03-02T16:00:00.000Z" itemprop="datePublished">2019-03-03</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      EventBus源码解析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/源码解析/">源码解析</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/开源框架/">开源框架</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>转自<a href="https://www.bookstack.cn/read/android_interview/android-open-source-framework-EventBus.md" target="_blank" rel="noopener">EventBus解析</a></p>
+<h2 id="简析EventBus"><a href="#简析EventBus" class="headerlink" title="简析EventBus"></a>简析EventBus</h2><p>EventBus是一个Android端优化的publish/subscribe消息总线，简化了应用程序内各组件间、组件与后台线程间的通信。<br>作为一个消息总线主要有三个组成部分：</p>
+<p>事件（Event）：可以是任意类型的对象。通过事件的发布者将事件进行传递。</p>
+<p>事件订阅者（Subscriber）：接收特定的事件。</p>
+<p>事件发布者（Publisher）：用于通知 Subscriber 有事件发生。可以在任意线程任意位置发送事件。<br><img src="/images/eventbus_simple_resolve.png" alt="eventbus_resolve"><br>事件的发布者（Publisher）将事件（Event）通过post()方法发送。EventBus内部进行处理，找到订阅了该事件（Event）的事件订阅者（Subscriber）。然后该事件的订阅者（Subscriber）通过onEvent()方法接收事件进行相关处理（关于onEvent()在EventBus 3.0中有改动，下面详细说明）。</p>
+<h2 id="demo"><a href="#demo" class="headerlink" title="demo"></a>demo</h2><p>注册订阅<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EventBus.getDefault().register(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure></p>
+<p>事件处理<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subscribe</span>(threadMode = ThreadMode.MainThread)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">onNewsEvent</span><span class="params">(NewsEvent event)</span></span>&#123;</span><br><span class="line">        String message = event.getMessage();</span><br><span class="line">        mTv_message.setText(message);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>发布事件<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EventBus.getDefault().post(<span class="keyword">new</span> NewsEvent(<span class="string">"我是来自SecondActivity的消息，你好！"</span>));</span><br></pre></td></tr></table></figure></p>
+<h2 id="Register"><a href="#Register" class="headerlink" title="Register"></a>Register</h2><p>进入getDefault()<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">volatile</span> EventBus defaultInstance;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EventBus <span class="title">getDefault</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (EventBus<span class="class">.<span class="keyword">class</span>) </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    defaultInstance = <span class="keyword">new</span> EventBus();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> defaultInstance;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过上述代码可以得知，getDefault()中通过双检查锁（DCL）机制实现了EventBus的单例机制，获得了一个默认配置的EventBus对象。<br>在了解register()之前，先要了解一下EventBus中的几个关键的成员变量。方便对下面内容的理解。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Map&lt;订阅事件, 订阅该事件的订阅者集合&gt; */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Class&lt;?&gt;, CopyOnWriteArrayList&lt;Subscription&gt;&gt; subscriptionsByEventType;</span><br><span class="line"><span class="comment">/* Map&lt;订阅者, 订阅事件集合&gt; */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Object, List&lt;Class&lt;?&gt;&gt;&gt; typesBySubscriber;</span><br><span class="line"><span class="comment">/* Map&lt;订阅事件类类型,订阅事件实例对象&gt;. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Class&lt;?&gt;, Object&gt; stickyEvents;</span><br></pre></td></tr></table></figure></p>
+<p>下面看具体的register()中执行的代码。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">register</span><span class="params">(Object subscriber)</span> </span>&#123;</span><br><span class="line"><span class="comment">//订阅者类型</span></span><br><span class="line">       Class&lt;?&gt; subscriberClass = subscriber.getClass();</span><br><span class="line">	 <span class="comment">//获取订阅者全部的响应函数信息（即上面的onNewsEvent()之类的方法）</span></span><br><span class="line">       List&lt;SubscriberMethod&gt; subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriberClass);</span><br><span class="line">       <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">	 <span class="comment">//循环每一个事件响应函数，执行 subscribe()方法，更新订阅相关信息</span></span><br><span class="line">           <span class="keyword">for</span> (SubscriberMethod subscriberMethod : subscriberMethods) &#123;</span><br><span class="line">               subscribe(subscriber, subscriberMethod);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>register()</p>
+<ol>
+<li>获取订阅者的类类型</li>
+<li>通过SubscriberMethodFinder类来解析订阅者类,获取所有的响应函数集合</li>
+<li>遍历订阅函数,执行 subscribe()方法，更新订阅相关信息</li>
+</ol>
+<p>继续看subscribe()方法。<br>subscribe 函数分三步<br>第一步：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">//获取订阅的事件类型</span></span><br><span class="line">  Class&lt;?&gt; eventType = subscriberMethod.eventType;</span><br><span class="line"> <span class="comment">//获取订阅该事件的订阅者集合</span></span><br><span class="line">  CopyOnWriteArrayList&lt;Subscription&gt; subscriptions = subscriptionsByEventType.get(eventType);</span><br><span class="line"><span class="comment">//把通过register()订阅的订阅者包装成Subscription 对象</span></span><br><span class="line">  Subscription newSubscription = <span class="keyword">new</span> Subscription(subscriber, subscriberMethod);</span><br><span class="line">  <span class="comment">//订阅者集合为空，创建新的集合，并把newSubscription 加入</span></span><br><span class="line">  <span class="keyword">if</span> (subscriptions == <span class="keyword">null</span>) &#123;</span><br><span class="line">      subscriptions = <span class="keyword">new</span> CopyOnWriteArrayList&lt;Subscription&gt;();</span><br><span class="line">      subscriptionsByEventType.put(eventType, subscriptions);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">//集合中已经有该订阅者，抛出异常。不能重复订阅</span></span><br><span class="line">      <span class="keyword">if</span> (subscriptions.contains(newSubscription)) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> EventBusException(<span class="string">"Subscriber "</span> + subscriber.getClass() + <span class="string">" already registered to event "</span></span><br><span class="line">                  + eventType);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"> <span class="comment">//把新的订阅者按照优先级加入到订阅者集合中。</span></span><br><span class="line">  <span class="keyword">synchronized</span> (subscriptions) &#123;</span><br><span class="line">      <span class="keyword">int</span> size = subscriptions.size();</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= size; i++) &#123;</span><br><span class="line">          <span class="keyword">if</span> (i == size || subscriberMethod.priority &gt; subscriptions.get(i).subscriberMethod.priority) &#123;</span><br><span class="line">              subscriptions.add(i, newSubscription);</span><br><span class="line">              <span class="keyword">break</span>;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>第二步：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">//根据订阅者，获得该订阅者订阅的事件类型集合</span></span><br><span class="line"> List&lt;Class&lt;?&gt;&gt; subscribedEvents = typesBySubscriber.get(subscriber);</span><br><span class="line"><span class="comment">//如果事件类型集合为空，创建新的集合，并加入新订阅的事件类型。</span></span><br><span class="line"> <span class="keyword">if</span> (subscribedEvents == <span class="keyword">null</span>) &#123;</span><br><span class="line">     subscribedEvents = <span class="keyword">new</span> ArrayList&lt;Class&lt;?&gt;&gt;();</span><br><span class="line">     typesBySubscriber.put(subscriber, subscribedEvents);</span><br><span class="line"> &#125;</span><br><span class="line"><span class="comment">//如果事件类型集合不为空，加入新订阅的事件类型</span></span><br><span class="line"> subscribedEvents.add(eventType);</span><br></pre></td></tr></table></figure></p>
+<p>第三步：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//该事件是stick=true。</span></span><br><span class="line"><span class="keyword">if</span> (subscriberMethod.sticky) &#123;</span><br><span class="line">            <span class="comment">//响应订阅事件的父类事件</span></span><br><span class="line">            <span class="keyword">if</span> (eventInheritance) &#123;</span><br><span class="line">                Set&lt;Map.Entry&lt;Class&lt;?&gt;, Object&gt;&gt; entries = stickyEvents.entrySet();</span><br><span class="line">                <span class="comment">//循环获得每个stickyEvent事件</span></span><br><span class="line">                <span class="keyword">for</span> (Map.Entry&lt;Class&lt;?&gt;, Object&gt; entry : entries) &#123;</span><br><span class="line">                    Class&lt;?&gt; candidateEventType = entry.getKey();</span><br><span class="line">                    <span class="comment">//是该类的父类</span></span><br><span class="line">                    <span class="keyword">if</span> (eventType.isAssignableFrom(candidateEventType)) &#123;</span><br><span class="line">                         <span class="comment">//该事件类型最新的事件发送给当前订阅者。</span></span><br><span class="line">                        Object stickyEvent = entry.getValue();</span><br><span class="line">                        checkPostStickyEventToSubscription(newSubscription, stickyEvent);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Object stickyEvent = stickyEvents.get(eventType);</span><br><span class="line">                checkPostStickyEventToSubscription(newSubscription, stickyEvent);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>通过subscriptionsByEventType得到该事件类型所有订阅者信息队列，根据优先级将当前订阅者信息插入到订阅者队列subscriptionsByEventType中；</li>
+<li>在typesBySubscriber中得到当前订阅者订阅的所有事件队列，将此事件保存到队列typesBySubscriber中，用于后续取消订阅；</li>
+<li>检查这个事件是否是 Sticky 事件，如果是则从stickyEvents事件保存队列中取出该事件类型最后一个事件发送给当前订阅者。</li>
+</ol>
+<p>以下是订阅的具体流程图：<br><img src="/images/eventbus_register.png" alt="eventbus_register"></p>
+<h2 id="unRegister"><a href="#unRegister" class="headerlink" title="unRegister"></a>unRegister</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">unregister</span><span class="params">(Object subscriber)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取该订阅者所有的订阅事件类类型集合.</span></span><br><span class="line">    List&lt;Class&lt;?&gt;&gt; subscribedTypes = typesBySubscriber.get(subscriber);</span><br><span class="line">    <span class="keyword">if</span> (subscribedTypes != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (Class&lt;?&gt; eventType : subscribedTypes) &#123;</span><br><span class="line">            unsubscribeByEventType(subscriber, eventType);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 从typesBySubscriber删除该&lt;订阅者对象,订阅事件类类型集合&gt;</span></span><br><span class="line">        typesBySubscriber.remove(subscriber);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Log.e(<span class="string">"EventBus"</span>, <span class="string">"Subscriber to unregister was not registered before: "</span></span><br><span class="line">                + subscriber.getClass());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">unsubscribeByEventType</span><span class="params">(Object subscriber, Class&lt;?&gt; eventType)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取订阅事件对应的订阅者信息集合.</span></span><br><span class="line">    List&lt;Subscription&gt; subscriptions = subscriptionsByEventType.get(eventType);</span><br><span class="line">    <span class="keyword">if</span> (subscriptions != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> size = subscriptions.size();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size; i ++) &#123;</span><br><span class="line">            Subscription subscription = subscriptions.get(i);</span><br><span class="line">            <span class="comment">// 从订阅者集合中删除特定的订阅者.</span></span><br><span class="line">            <span class="keyword">if</span> (subscription.subscriber == subscriber) &#123;</span><br><span class="line">                subscription.active = <span class="keyword">false</span>;</span><br><span class="line">                subscriptions.remove(i);</span><br><span class="line">                i --;</span><br><span class="line">                size --;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>unregister()方法比较简单，主要完成了subscriptionsByEventType以及typesBySubscriber两个集合的同步。</p>
+<h2 id="Post"><a href="#Post" class="headerlink" title="Post"></a>Post</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">post</span><span class="params">(Object event)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取当前线程的Posting状态.</span></span><br><span class="line">    PostingThreadState postingState = currentPostingThreadState.get();</span><br><span class="line">    <span class="comment">// 获取当前线程的事件队列.</span></span><br><span class="line">    List&lt;Object&gt; eventQueue = postingState.eventQueue;</span><br><span class="line">    <span class="comment">//将当前事件添加到其事件队列</span></span><br><span class="line">    eventQueue.add(event);</span><br><span class="line">    <span class="comment">//判断新加入的事件是否在分发中</span></span><br><span class="line">    <span class="keyword">if</span> (!postingState.isPosting) &#123;</span><br><span class="line">        postingState.isMainThread = Looper.getMainLooper() == Looper.myLooper();</span><br><span class="line">        postingState.isPosting = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">if</span> (postingState.canceled) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EventBusException(<span class="string">"Internal error. Abort state was not reset"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 循环处理当前线程eventQueue中的每一个event对象.</span></span><br><span class="line">            <span class="keyword">while</span> (!eventQueue.isEmpty()) &#123;</span><br><span class="line">                postSingleEvent(eventQueue.remove(<span class="number">0</span>), postingState);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// 重置postingState一些标识信息.</span></span><br><span class="line">            postingState.isPosting = <span class="keyword">false</span>;</span><br><span class="line">            postingState.isMainThread = <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>post 函数会首先得到当前线程的 post 信息 PostingThreadState，其中包含事件队列，将当前事件添加到其事件队列中，然后循环调用 postSingleEvent 函数发布队列中的每个事件。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">postSingleEvent</span><span class="params">(Object event, PostingThreadState postingState)</span> </span>&#123;</span><br><span class="line">   <span class="comment">//分发事件的类型</span></span><br><span class="line">    Class&lt;?&gt; eventClass = event.getClass();</span><br><span class="line">    <span class="keyword">boolean</span> subscriptionFound = <span class="keyword">false</span>;</span><br><span class="line">   <span class="comment">//响应订阅事件的父类事件</span></span><br><span class="line">    <span class="keyword">if</span> (eventInheritance) &#123;</span><br><span class="line">        <span class="comment">//找出当前订阅事件类类型eventClass的所有父类的类类型和其实现的接口的类类型</span></span><br><span class="line">        List&lt;Class&lt;?&gt;&gt; eventTypes = lookupAllEventTypes(eventClass);</span><br><span class="line">        <span class="keyword">int</span> countTypes = eventTypes.size();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> h = <span class="number">0</span>; h &lt; countTypes; h ++) &#123;</span><br><span class="line">            Class&lt;?&gt; clazz = eventTypes.get(h);</span><br><span class="line">            <span class="comment">//发布每个事件到每个订阅者</span></span><br><span class="line">            subscriptionFound |= postSingleEventForEventType(event, postingState, clazz);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        subscriptionFound = postSingleEventForEventType(event, postingState, eventClass);</span><br><span class="line">    &#125;</span><br><span class="line">........</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>调用 postSingleEventForEventType 函数发布每个事件到每个订阅者。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">postSingleEventForEventType</span><span class="params">(Object event, PostingThreadState postingState,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            Class&lt;?&gt; eventClass)</span> </span>&#123;</span><br><span class="line">    CopyOnWriteArrayList&lt;Subscription&gt; subscriptions;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        <span class="comment">// 获取订阅事件类类型对应的订阅者信息集合.(register函数时构造的集合)</span></span><br><span class="line">        subscriptions = subscriptionsByEventType.get(eventClass);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (subscriptions != <span class="keyword">null</span> &amp;&amp; !subscriptions.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">for</span> (Subscription subscription : subscriptions) &#123;</span><br><span class="line">            postingState.event = event;</span><br><span class="line">            postingState.subscription = subscription;</span><br><span class="line">            <span class="keyword">boolean</span> aborted = <span class="keyword">false</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 发布订阅事件给订阅函数</span></span><br><span class="line">                postToSubscription(subscription, event, postingState.isMainThread);</span><br><span class="line">                aborted = postingState.canceled;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                postingState.event = <span class="keyword">null</span>;</span><br><span class="line">                postingState.subscription = <span class="keyword">null</span>;</span><br><span class="line">                postingState.canceled = <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (aborted) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>调用 postToSubscription 函数向每个订阅者发布事件。<br>postToSubscription 函数中会判断订阅者的 ThreadMode，从而决定在什么 Mode 下执行事件响应函数。这里就不贴源码了。后续还牵着到反射以及线程调度问题，这里就不展开了。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">postToSubscription</span><span class="params">(Subscription subscription, Object event, <span class="keyword">boolean</span> isMainThread)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (subscription.subscriberMethod.threadMode) &#123;</span><br><span class="line">        <span class="keyword">case</span> POSTING:</span><br><span class="line">            invokeSubscriber(subscription, event);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> MAIN:</span><br><span class="line">            <span class="keyword">if</span> (isMainThread) &#123;</span><br><span class="line">                invokeSubscriber(subscription, event);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                mainThreadPoster.enqueue(subscription, event);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> MAIN_ORDERED:</span><br><span class="line">            <span class="keyword">if</span> (mainThreadPoster != <span class="keyword">null</span>) &#123;</span><br><span class="line">                mainThreadPoster.enqueue(subscription, event);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// temporary: technically not correct as poster not decoupled from subscriber</span></span><br><span class="line">                invokeSubscriber(subscription, event);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> BACKGROUND:</span><br><span class="line">            <span class="keyword">if</span> (isMainThread) &#123;</span><br><span class="line">                backgroundPoster.enqueue(subscription, event);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                invokeSubscriber(subscription, event);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> ASYNC:</span><br><span class="line">            asyncPoster.enqueue(subscription, event);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Unknown thread mode: "</span> + subscription.subscriberMethod.threadMode);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中mainThreadPoster是一个Handler。<br>下面是具体的post的流程图<br><img src="/images/eventbus_post.png" alt="eventbus_post"></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/03/03/EventBus解析/">EventBus源码解析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2019-03-03, 00:00:00</p>
+        <p><span>最后更新:</span>2019-03-24, 11:40:28</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/03/03/EventBus解析/" title="EventBus源码解析">http://yoursite.com/2019/03/03/EventBus解析/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/03/EventBus解析/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/03/06/平衡二叉树的判断/">
+                    平衡二叉树的判断
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/03/03/Linux epoll模型/">
+                    Linux epoll模型
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简析EventBus"><span class="toc-number">1.</span> <span class="toc-text">简析EventBus</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#demo"><span class="toc-number">2.</span> <span class="toc-text">demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Register"><span class="toc-number">3.</span> <span class="toc-text">Register</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#unRegister"><span class="toc-number">4.</span> <span class="toc-text">unRegister</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Post"><span class="toc-number">5.</span> <span class="toc-text">Post</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"EventBus源码解析　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/03/06/平衡二叉树的判断/" title="上一篇: 平衡二叉树的判断">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/03/03/Linux epoll模型/" title="下一篇: Linux epoll模型">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/拍照，图册选取，截图的心路历程/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout与LinearLayout的onMeasure方法/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/数组中的K个最大元素/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide源码解析/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/左旋转字符串/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/翻转单词顺序/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider源码解析/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/和为S的连续正数序列/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/平衡二叉树的判断/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus解析/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux epoll模型/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit源码解析/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/数组中的逆序对/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap源码简析/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava订阅解析/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/手势密码源码解析/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/数组中重复的数字/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/把数组排成最小的数/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO与VO辨析/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto源码剖析/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread和IntentService源码解析/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap的高效加载/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/二叉搜索树转换双向链表/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/对象拷贝/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/二叉树中和为某一特定值的路径/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid  sequence of Binary Tree‘s post order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View的工作原理/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/自定义View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View的滑动冲突/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/卷积神经网络工作原理/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/事件分发源码解析/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move 0/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x, n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue implement stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/手撕HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing a stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate all combinations of well-formed parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find the maximum path sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine if it is a power of two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate the list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product of all the elements of nums except nums[i]/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/盛最多水的容器/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete the duplicates in a sorted array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think about FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations of a Phone Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find three integers in nums such that the sum is closest to target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find longest palindromic substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find the median of the two sorted arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview多布局显示/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find the single one number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian doll envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8 validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow的迭代方法/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the contiguous subarray which has the largest sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find the largest square area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best Time to Buy and Sell Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The min stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter配置/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge K linked list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The zigzag level order traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add the two non-negative numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find the cycle begins node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort a linked list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build apk with an illegal state exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge overlapping intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The kth permutation sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find the length of the longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The kth largest element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching Rotated array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore  IP address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The sum of three elements is zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse the string word by word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The permutation of string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http缓存/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp源码/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp责任链分析/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android 8.0 apk自动更新的一些坑/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android事件分发源码解析/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM上拉加载RecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView嵌套横向滑动冲突/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/代理/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach与迭代器/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/运行时类型信息/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin逍遥篇/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin觉醒篇/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/导入新项目安装在真机时出现dex.jar is missing错误/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

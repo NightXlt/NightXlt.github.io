@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Night">
+
+
+
+<meta name="keywords" content="Leetcode,字节跳动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The zigzag level order traversal">
+<meta property="og:url" content="http://yoursite.com/2019/01/05/The zigzag level order traversal/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-01-06T12:40:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The zigzag level order traversal">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>The zigzag level order traversal | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android，消息机制/">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug调试/">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件体系/">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件分发/">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View的工作原理/">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件总线/">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/剑指Offer/">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字符串/">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字节跳动/">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开源框架/">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码解析/">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存/">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/腾讯/">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自定义View/">自定义View</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-The zigzag level order traversal" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/01/05/The zigzag level order traversal/" class="article-date">
+      <time datetime="2019-01-04T16:00:00.000Z" itemprop="datePublished">2019-01-05</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      The zigzag level order traversal
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/algorithm/">algorithm</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Leetcode/">Leetcode</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/字节跳动/">字节跳动</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><h3 id="Given-a-binary-tree-return-the-zigzag-level-order-traversal-of-its-nodes’-values-ie-from-left-to-right-then-right-to-left-for-the-next-level-and-alternate-between"><a href="#Given-a-binary-tree-return-the-zigzag-level-order-traversal-of-its-nodes’-values-ie-from-left-to-right-then-right-to-left-for-the-next-level-and-alternate-between" class="headerlink" title="Given a binary tree, return the zigzag level order traversal of its nodes’ values. (ie, from left to right, then right to left for the next level and alternate between)."></a>Given a binary tree, return the zigzag level order traversal of its nodes’ values. (ie, from left to right, then right to left for the next level and alternate between).</h3><h2 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Example <span class="number">1</span>:</span><br><span class="line">Input: [<span class="number">3</span>,<span class="number">9</span>,<span class="number">20</span>,<span class="keyword">null</span>,<span class="keyword">null</span>,<span class="number">15</span>,<span class="number">7</span>]</span><br><span class="line">Output:: [</span><br><span class="line">  [<span class="number">3</span>],</span><br><span class="line">  [<span class="number">20</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">15</span>,<span class="number">7</span>]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>　　层次遍历的封装吧，层次遍历细节处理注意，起初分为奇偶层处理，奇数层：先加入左子树，后加入右子树。偶数层：先加入右子树，后加入左子树。但没有意识到偶数层逆序加入后，它下面的奇数层无法再顺序访问。<br> 　　无需在加入队列中特殊化处理，在加入List时做顺序逆序处理。</p>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * public class TreeNode &#123;</span></span><br><span class="line"><span class="comment"> *     int val;</span></span><br><span class="line"><span class="comment"> *     TreeNode left;</span></span><br><span class="line"><span class="comment"> *     TreeNode right;</span></span><br><span class="line"><span class="comment"> *     TreeNode(int x) &#123; val = x; &#125;</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; zigzagLevelOrder(TreeNode root) &#123;</span><br><span class="line">        List&lt;List&lt;Integer&gt;&gt; treeNodes = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">if</span> (root == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> treeNodes;</span><br><span class="line">        &#125;</span><br><span class="line">        Queue&lt;TreeNode&gt; queue = <span class="keyword">new</span> ArrayDeque&lt;&gt;();</span><br><span class="line">        queue.add(root);</span><br><span class="line">        TreeNode p;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">boolean</span> isReverse = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">while</span> (!queue.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">int</span> size = queue.size();</span><br><span class="line">            List&lt;Integer&gt; treeNode = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (size-- != <span class="number">0</span>) &#123;</span><br><span class="line">                p = queue.poll();</span><br><span class="line">                <span class="keyword">if</span> (p.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    queue.add(p.left);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (p.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    queue.add(p.right);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (!isReverse) &#123;</span><br><span class="line">                    treeNode.add(p.val);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    treeNode.add(<span class="number">0</span>, p.val);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            isReverse = !isReverse;</span><br><span class="line">            treeNodes.add(treeNode);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> treeNodes;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/01/05/The zigzag level order traversal/">The zigzag level order traversal</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2019-01-05, 00:00:00</p>
+        <p><span>最后更新:</span>2019-01-06, 20:40:40</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/01/05/The zigzag level order traversal/" title="The zigzag level order traversal">http://yoursite.com/2019/01/05/The zigzag level order traversal/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/01/05/The zigzag level order traversal/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/01/05/Merge K linked list/">
+                    Merge K linked list
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/01/04/Add the two non-negative numbers/">
+                    Add the two non-negative numbers
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Problem-description"><span class="toc-number">1.</span> <span class="toc-text">Problem description</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Given-a-binary-tree-return-the-zigzag-level-order-traversal-of-its-nodes’-values-ie-from-left-to-right-then-right-to-left-for-the-next-level-and-alternate-between"><span class="toc-number">1.1.</span> <span class="toc-text">Given a binary tree, return the zigzag level order traversal of its nodes’ values. (ie, from left to right, then right to left for the next level and alternate between).</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Examples"><span class="toc-number">2.</span> <span class="toc-text">Examples</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Solution"><span class="toc-number">3.</span> <span class="toc-text">Solution</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Code"><span class="toc-number">4.</span> <span class="toc-text">Code</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"The zigzag level order traversal　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/01/05/Merge K linked list/" title="上一篇: Merge K linked list">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/01/04/Add the two non-negative numbers/" title="下一篇: Add the two non-negative numbers">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/拍照，图册选取，截图的心路历程/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout与LinearLayout的onMeasure方法/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/数组中的K个最大元素/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide源码解析/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/左旋转字符串/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/翻转单词顺序/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider源码解析/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/和为S的连续正数序列/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/平衡二叉树的判断/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus解析/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux epoll模型/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit源码解析/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/数组中的逆序对/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap源码简析/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava订阅解析/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/手势密码源码解析/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/数组中重复的数字/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/把数组排成最小的数/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO与VO辨析/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto源码剖析/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread和IntentService源码解析/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap的高效加载/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/二叉搜索树转换双向链表/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/对象拷贝/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/二叉树中和为某一特定值的路径/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid  sequence of Binary Tree‘s post order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View的工作原理/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/自定义View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View的滑动冲突/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/卷积神经网络工作原理/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/事件分发源码解析/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move 0/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x, n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue implement stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/手撕HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing a stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate all combinations of well-formed parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find the maximum path sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine if it is a power of two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate the list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product of all the elements of nums except nums[i]/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/盛最多水的容器/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete the duplicates in a sorted array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think about FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations of a Phone Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find three integers in nums such that the sum is closest to target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find longest palindromic substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find the median of the two sorted arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview多布局显示/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find the single one number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian doll envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8 validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow的迭代方法/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the contiguous subarray which has the largest sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find the largest square area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best Time to Buy and Sell Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The min stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter配置/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge K linked list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The zigzag level order traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add the two non-negative numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find the cycle begins node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort a linked list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build apk with an illegal state exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge overlapping intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The kth permutation sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find the length of the longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The kth largest element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching Rotated array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore  IP address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The sum of three elements is zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse the string word by word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The permutation of string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http缓存/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp源码/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp责任链分析/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android 8.0 apk自动更新的一些坑/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android事件分发源码解析/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM上拉加载RecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView嵌套横向滑动冲突/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/代理/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach与迭代器/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/运行时类型信息/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin逍遥篇/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin觉醒篇/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/导入新项目安装在真机时出现dex.jar is missing错误/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

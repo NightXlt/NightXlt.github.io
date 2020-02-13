@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Night">
+
+
+
+<meta name="description" content="咦，移动方向怎么不对呀！">
+<meta name="keywords" content="Android,源码解析,View事件体系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Scroller、ScrollTo、ScrollBy源码解析">
+<meta property="og:url" content="http://yoursite.com/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:description" content="咦，移动方向怎么不对呀！">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-01T05:11:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Scroller、ScrollTo、ScrollBy源码解析">
+<meta name="twitter:description" content="咦，移动方向怎么不对呀！">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Scroller、ScrollTo、ScrollBy源码解析 | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android，消息机制/">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug调试/">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件体系/">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View事件分发/">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View的工作原理/">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件总线/">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/剑指Offer/">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字符串/">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/字节跳动/">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开源框架/">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码解析/">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存/">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/腾讯/">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自定义View/">自定义View</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-Scroller、ScrollTo、ScrollBy源码解析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/" class="article-date">
+      <time datetime="2019-02-01T16:00:00.000Z" itemprop="datePublished">2019-02-02</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Scroller、ScrollTo、ScrollBy源码解析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Android开发艺术探索/">Android开发艺术探索</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/View事件体系/">View事件体系</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码解析/">源码解析</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h2><p> 　　本着写了忘，忘了写。还是写篇博文分析了工作流程加深记忆，滑动方向每次都出错。</p>
+<h2 id="ScrollTo与ScrollBy两兄弟"><a href="#ScrollTo与ScrollBy两兄弟" class="headerlink" title="ScrollTo与ScrollBy两兄弟"></a>ScrollTo与ScrollBy两兄弟</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*Set scrollX,scrollY.inValidate </span></span><br><span class="line"><span class="comment">   mSrollX:The offset, in pixels, by which the content of this view is scrolled horizontally.</span></span><br><span class="line"><span class="comment">   mSrollY:The offset, in pixels, by which the content of this view is scrolled</span></span><br><span class="line"><span class="comment">vertically.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">scrollTo</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (mScrollX != x || mScrollY != y) &#123;</span><br><span class="line">            <span class="keyword">int</span> oldX = mScrollX;</span><br><span class="line">            <span class="keyword">int</span> oldY = mScrollY;</span><br><span class="line">            mScrollX = x;</span><br><span class="line">            mScrollY = y;</span><br><span class="line">            invalidateParentCaches();</span><br><span class="line">            onScrollChanged(mScrollX, mScrollY, oldX, oldY);</span><br><span class="line">            <span class="keyword">if</span> (!awakenScrollBars()) &#123;</span><br><span class="line">                postInvalidateOnAnimation();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">	    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">scrollBy</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">        scrollTo(mScrollX + x, mScrollY + y);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出来ScrollBy是调用scrollTo.这样只需要分析scrollTo源码即可。先设置mScrollX,mScrollY.而ScrollX，Y是View内容的滑动距离。所以这就解释为什么只能ViewGroup调用该方法有效。Scroll传入偏移距离加上起始滑动距离 = 绝对距离。进入onScrollChanged方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onScrollChanged</span><span class="params">(<span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> oldl, <span class="keyword">int</span> oldt)</span> </span>&#123;</span><br><span class="line">        notifySubtreeAccessibilityStateChangedIfNeeded();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (AccessibilityManager.getInstance(mContext).isEnabled()) &#123;</span><br><span class="line">            postSendViewScrolledAccessibilityEventCallback();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        mBackgroundSizeChanged = <span class="keyword">true</span>;</span><br><span class="line">        mDefaultFocusHighlightSizeChanged = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">if</span> (mForegroundInfo != <span class="keyword">null</span>) &#123;</span><br><span class="line">            mForegroundInfo.mBoundsChanged = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> AttachInfo ai = mAttachInfo;</span><br><span class="line">        <span class="keyword">if</span> (ai != <span class="keyword">null</span>) &#123;</span><br><span class="line">            ai.mViewScrollChanged = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mListenerInfo != <span class="keyword">null</span> &amp;&amp; mListenerInfo.mOnScrollChangeListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">            mListenerInfo.mOnScrollChangeListener.onScrollChange(<span class="keyword">this</span>, l, t, oldl, oldt);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>当View注册了OnScrollChangeListener，onScrollChange才会被调用。在onScrollChanged()后调用了postInvalidateOnAnimation（）。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postInvalidateOnAnimation</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="comment">// We try only with the AttachInfo because there's no point in invalidating</span></span><br><span class="line">      <span class="comment">// if we are not attached to our window</span></span><br><span class="line">      <span class="keyword">final</span> AttachInfo attachInfo = mAttachInfo;</span><br><span class="line">      <span class="keyword">if</span> (attachInfo != <span class="keyword">null</span>) &#123;</span><br><span class="line">          attachInfo.mViewRootImpl.dispatchInvalidateOnAnimation(<span class="keyword">this</span>);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dispatchInvalidateOnAnimation</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">      mInvalidateOnAnimationRunnable.addView(view);</span><br><span class="line">  &#125;</span><br><span class="line">   <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">InvalidateOnAnimationRunnable</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">      <span class="keyword">private</span> <span class="keyword">boolean</span> mPosted;</span><br><span class="line">      <span class="keyword">private</span> <span class="keyword">final</span> ArrayList&lt;View&gt; mViews = <span class="keyword">new</span> ArrayList&lt;View&gt;();</span><br><span class="line">      <span class="keyword">private</span> <span class="keyword">final</span> ArrayList&lt;AttachInfo.InvalidateInfo&gt; mViewRects =</span><br><span class="line">              <span class="keyword">new</span> ArrayList&lt;AttachInfo.InvalidateInfo&gt;();</span><br><span class="line">      <span class="keyword">private</span> View[] mTempViews;</span><br><span class="line">      <span class="keyword">private</span> AttachInfo.InvalidateInfo[] mTempViewRects;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addView</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">              mViews.add(view);</span><br><span class="line">              postIfNeededLocked();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addViewRect</span><span class="params">(AttachInfo.InvalidateInfo info)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">              mViewRects.add(info);</span><br><span class="line">              postIfNeededLocked();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeView</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">              mViews.remove(view);</span><br><span class="line"></span><br><span class="line">              <span class="keyword">for</span> (<span class="keyword">int</span> i = mViewRects.size(); i-- &gt; <span class="number">0</span>; ) &#123;</span><br><span class="line">                  AttachInfo.InvalidateInfo info = mViewRects.get(i);</span><br><span class="line">                  <span class="keyword">if</span> (info.target == view) &#123;</span><br><span class="line">                      mViewRects.remove(i);</span><br><span class="line">                      info.recycle();</span><br><span class="line">                  &#125;</span><br><span class="line">              &#125;</span><br><span class="line"></span><br><span class="line">              <span class="keyword">if</span> (mPosted &amp;&amp; mViews.isEmpty() &amp;&amp; mViewRects.isEmpty()) &#123;</span><br><span class="line">                  mChoreographer.removeCallbacks(Choreographer.CALLBACK_ANIMATION, <span class="keyword">this</span>, <span class="keyword">null</span>);</span><br><span class="line">                  mPosted = <span class="keyword">false</span>;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">final</span> <span class="keyword">int</span> viewCount;</span><br><span class="line">          <span class="keyword">final</span> <span class="keyword">int</span> viewRectCount;</span><br><span class="line">          <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">              mPosted = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">              viewCount = mViews.size();</span><br><span class="line">              <span class="keyword">if</span> (viewCount != <span class="number">0</span>) &#123;</span><br><span class="line">                  mTempViews = mViews.toArray(mTempViews != <span class="keyword">null</span></span><br><span class="line">                          ? mTempViews : <span class="keyword">new</span> View[viewCount]);</span><br><span class="line">                  mViews.clear();</span><br><span class="line">              &#125;</span><br><span class="line"></span><br><span class="line">              viewRectCount = mViewRects.size();</span><br><span class="line">              <span class="keyword">if</span> (viewRectCount != <span class="number">0</span>) &#123;</span><br><span class="line">                  mTempViewRects = mViewRects.toArray(mTempViewRects != <span class="keyword">null</span></span><br><span class="line">                          ? mTempViewRects : <span class="keyword">new</span> AttachInfo.InvalidateInfo[viewRectCount]);</span><br><span class="line">                  mViewRects.clear();</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; viewCount; i++) &#123;</span><br><span class="line">              mTempViews[i].invalidate();</span><br><span class="line">              mTempViews[i] = <span class="keyword">null</span>;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; viewRectCount; i++) &#123;</span><br><span class="line">              <span class="keyword">final</span> View.AttachInfo.InvalidateInfo info = mTempViewRects[i];</span><br><span class="line">              info.target.invalidate(info.left, info.top, info.right, info.bottom);</span><br><span class="line">              info.recycle();</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">postIfNeededLocked</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">if</span> (!mPosted) &#123;</span><br><span class="line">              mChoreographer.postCallback(Choreographer.CALLBACK_ANIMATION, <span class="keyword">this</span>, <span class="keyword">null</span>);</span><br><span class="line">              mPosted = <span class="keyword">true</span>;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>在addView中postIfNeededLocked()会调用到run(),在run()里遍历所有添加进去的View，然后对每个View调用invalidate()，<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invalidate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        invalidate(<span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">	    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invalidate</span><span class="params">(<span class="keyword">boolean</span> invalidateCache)</span> </span>&#123;</span><br><span class="line">        invalidateInternal(<span class="number">0</span>, <span class="number">0</span>, mRight - mLeft, mBottom - mTop, invalidateCache, <span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">invalidateInternal</span><span class="params">(<span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b, <span class="keyword">boolean</span> invalidateCache,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">boolean</span> fullInvalidate)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">            <span class="comment">// Propagate the damage rectangle to the parent view.</span></span><br><span class="line">            <span class="keyword">final</span> AttachInfo ai = mAttachInfo;</span><br><span class="line">            <span class="keyword">final</span> ViewParent p = mParent;</span><br><span class="line">            <span class="keyword">if</span> (p != <span class="keyword">null</span> &amp;&amp; ai != <span class="keyword">null</span> &amp;&amp; l &lt; r &amp;&amp; t &lt; b) &#123;</span><br><span class="line">                <span class="keyword">final</span> Rect damage = ai.mTmpInvalRect;</span><br><span class="line">                damage.set(l, t, r, b);</span><br><span class="line">                p.invalidateChild(<span class="keyword">this</span>, damage);<span class="comment">// Invalidate child</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Damage the entire projection receiver, if necessary.</span></span><br><span class="line">            <span class="keyword">if</span> (mBackground != <span class="keyword">null</span> &amp;&amp; mBackground.isProjected()) &#123;</span><br><span class="line">                <span class="keyword">final</span> View receiver = getProjectionReceiver();</span><br><span class="line">                <span class="keyword">if</span> (receiver != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    receiver.damageInParent();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>p.invalidateChild()这就是scrollTo移动的是View的内容的真相。再来揭示为何方向相反呢?进入ViewGroup的invalidateChild().<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Deprecated</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">invalidateChild</span><span class="params">(View child, <span class="keyword">final</span> Rect dirty)</span> </span>&#123;</span><br><span class="line">    ···</span><br><span class="line">                parent = parent.invalidateChildInParent(location, dirty);</span><br><span class="line">                <span class="keyword">if</span> (view != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="comment">// Account for transform on current parent</span></span><br><span class="line">                    Matrix m = view.getMatrix();</span><br><span class="line">                    <span class="keyword">if</span> (!m.isIdentity()) &#123;</span><br><span class="line">                        RectF boundingRect = attachInfo.mTmpTransformRect;</span><br><span class="line">                        boundingRect.set(dirty);</span><br><span class="line">                        m.mapRect(boundingRect);</span><br><span class="line">                        dirty.set((<span class="keyword">int</span>) Math.floor(boundingRect.left),</span><br><span class="line">                                (<span class="keyword">int</span>) Math.floor(boundingRect.top),</span><br><span class="line">                                (<span class="keyword">int</span>) Math.ceil(boundingRect.right),</span><br><span class="line">                                (<span class="keyword">int</span>) Math.ceil(boundingRect.bottom));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">while</span> (parent != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>里面有一行代码parent = parent.invalidateChildInParent(location, dirty);进去invalidateChildInParent（）<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> ViewParent <span class="title">invalidateChildInParent</span><span class="params">(<span class="keyword">int</span>[] location, Rect dirty)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">if</span> (mHostView != <span class="keyword">null</span>) &#123;</span><br><span class="line">              dirty.offset(location[<span class="number">0</span>], location[<span class="number">1</span>]);</span><br><span class="line">              <span class="keyword">if</span> (mHostView <span class="keyword">instanceof</span> ViewGroup) &#123;</span><br><span class="line">                  location[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">                  location[<span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line">                  <span class="keyword">super</span>.invalidateChildInParent(location, dirty);</span><br><span class="line">                  <span class="keyword">return</span> ((ViewGroup) mHostView).invalidateChildInParent(location, dirty);</span><br><span class="line">              &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                  invalidate(dirty);</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>进入 invalidate(dirty);<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invalidate</span><span class="params">(Rect dirty)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> scrollX = mScrollX;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> scrollY = mScrollY;</span><br><span class="line">    invalidateInternal(dirty.left - scrollX, dirty.top - scrollY,</span><br><span class="line">            dirty.right - scrollX, dirty.bottom - scrollY, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这就是为什么方向会相反的原因啦。整个scrollTo透露着一股观察者模式的气味，当调用scrollTo（）时，InvalidateOnAnimationRunnable中的run()会通知所有子View。让其重绘。</p>
+<h2 id="Scroller源码"><a href="#Scroller源码" class="headerlink" title="Scroller源码"></a>Scroller源码</h2><p>Scroller典型用法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">computeScroll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.computeScroll();</span><br><span class="line">    <span class="comment">// 判断Scroller是否执行完毕</span></span><br><span class="line">    <span class="keyword">if</span> (mScroller.computeScrollOffset()) &#123;</span><br><span class="line">        ((View) getParent()).scrollTo(</span><br><span class="line">                mScroller.getCurrX(),<span class="comment">//获取当前的滑动坐标</span></span><br><span class="line">                mScroller.getCurrY());</span><br><span class="line">        <span class="comment">// 通过重绘来不断调用computeScroll</span></span><br><span class="line">        postInvalidate();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = (<span class="keyword">int</span>) event.getX();</span><br><span class="line">    <span class="keyword">int</span> y = (<span class="keyword">int</span>) event.getY();</span><br><span class="line">    <span class="keyword">switch</span> (event.getAction()) &#123;</span><br><span class="line">        <span class="keyword">case</span> MotionEvent.ACTION_DOWN:</span><br><span class="line">            lastX = (<span class="keyword">int</span>) event.getX();</span><br><span class="line">            lastY = (<span class="keyword">int</span>) event.getY();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> MotionEvent.ACTION_MOVE:</span><br><span class="line">            <span class="keyword">int</span> offsetX = x - lastX;</span><br><span class="line">            <span class="keyword">int</span> offsetY = y - lastY;</span><br><span class="line">            ((View) getParent()).scrollBy(-offsetX, -offsetY);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> MotionEvent.ACTION_UP:</span><br><span class="line">            <span class="comment">// 手指离开时，执行滑动过程</span></span><br><span class="line">            View viewGroup = ((View) getParent());</span><br><span class="line">            mScroller.startScroll(</span><br><span class="line">                    viewGroup.getScrollX(),</span><br><span class="line">                    viewGroup.getScrollY(),</span><br><span class="line">                    -viewGroup.getScrollX(),</span><br><span class="line">                    -viewGroup.getScrollY());</span><br><span class="line">            invalidate();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>与scrollTo（）、scrollBy（）同样，滑动的是View的内容。首先进入startScroll（）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startScroll</span><span class="params">(<span class="keyword">int</span> startX, <span class="keyword">int</span> startY, <span class="keyword">int</span> dx, <span class="keyword">int</span> dy, <span class="keyword">int</span> duration)</span> </span>&#123;</span><br><span class="line">    mMode = SCROLL_MODE;</span><br><span class="line">    mFinished = <span class="keyword">false</span>;</span><br><span class="line">    mDuration = duration;</span><br><span class="line">    mStartTime = AnimationUtils.currentAnimationTimeMillis();</span><br><span class="line">    mStartX = startX;</span><br><span class="line">    mStartY = startY;</span><br><span class="line">    mFinalX = startX + dx;</span><br><span class="line">    mFinalY = startY + dy;</span><br><span class="line">    mDeltaX = dx;</span><br><span class="line">    mDeltaY = dy;</span><br><span class="line">    mDurationReciprocal = <span class="number">1.0f</span> / (<span class="keyword">float</span>) mDuration;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>里面除了设值什么也没做，那Scroller是怎么让View滑起来的呢？秘密就在startScroll（）的下一行invalidate()重绘中调用View中的draw()<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">draw</span><span class="params">(Canvas canvas, ViewGroup parent, <span class="keyword">long</span> drawingTime)</span> </span>&#123;</span><br><span class="line">   ...</span><br><span class="line"><span class="keyword">if</span> (!drawingWithRenderNode) &#123;</span><br><span class="line">          computeScroll();</span><br><span class="line">          sx = mScrollX;</span><br><span class="line">          sy = mScrollY;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure></p>
+<p>  里面会调用我们重写的computeScroll(),而在我们重写的computeScroll()里我们利用scrollTo完成了滑动操作。并同时启动了postInvalidate();开启了第二次重绘。反复直至滑动结束。最后再看看computeScrollOffset（）<br> <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">computeScrollOffset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (mFinished) &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">int</span> timePassed = (<span class="keyword">int</span>)(AnimationUtils.currentAnimationTimeMillis() - mStartTime);</span><br><span class="line">  </span><br><span class="line">      <span class="keyword">if</span> (timePassed &lt; mDuration) &#123;</span><br><span class="line">          <span class="keyword">switch</span> (mMode) &#123;</span><br><span class="line">          <span class="keyword">case</span> SCROLL_MODE:</span><br><span class="line">              <span class="keyword">final</span> <span class="keyword">float</span> x = mInterpolator.getInterpolation(timePassed * mDurationReciprocal);</span><br><span class="line">              mCurrX = mStartX + Math.round(x * mDeltaX);</span><br><span class="line">              mCurrY = mStartY + Math.round(x * mDeltaY);</span><br><span class="line">              <span class="keyword">break</span>;</span><br><span class="line">...</span><br><span class="line">  &#125;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">true</span>;</span><br></pre></td></tr></table></figure></p>
+<p>根据时间流逝的百分比算出scrollX和scrollY。返回为true意味着滑动还未结束，false：滑动已结束</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/">Scroller、ScrollTo、ScrollBy源码解析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2019-02-02, 00:00:00</p>
+        <p><span>最后更新:</span>2019-03-01, 13:11:46</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/" title="Scroller、ScrollTo、ScrollBy源码解析">http://yoursite.com/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/02/02/Move 0/">
+                    Move 0
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/02/01/Pow(x, n)/">
+                    Pow(x, n)
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#序言"><span class="toc-number">1.</span> <span class="toc-text">序言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ScrollTo与ScrollBy两兄弟"><span class="toc-number">2.</span> <span class="toc-text">ScrollTo与ScrollBy两兄弟</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Scroller源码"><span class="toc-number">3.</span> <span class="toc-text">Scroller源码</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Scroller、ScrollTo、ScrollBy源码解析　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/02/02/Move 0/" title="上一篇: Move 0">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/02/01/Pow(x, n)/" title="下一篇: Pow(x, n)">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/拍照，图册选取，截图的心路历程/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout与LinearLayout的onMeasure方法/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/数组中的K个最大元素/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide源码解析/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/左旋转字符串/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/翻转单词顺序/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider源码解析/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/和为S的连续正数序列/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/平衡二叉树的判断/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus解析/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux epoll模型/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit源码解析/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/数组中的逆序对/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap源码简析/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava订阅解析/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/手势密码源码解析/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/数组中重复的数字/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/把数组排成最小的数/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO与VO辨析/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto源码剖析/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread和IntentService源码解析/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap的高效加载/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/二叉搜索树转换双向链表/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/对象拷贝/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/二叉树中和为某一特定值的路径/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid  sequence of Binary Tree‘s post order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View的工作原理/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/自定义View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View的滑动冲突/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/卷积神经网络工作原理/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/事件分发源码解析/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move 0/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller、ScrollTo、ScrollBy源码解析/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x, n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue implement stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/手撕HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing a stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find all possible subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate all combinations of well-formed parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find the maximum path sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine if it is a power of two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate the list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product of all the elements of nums except nums[i]/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/盛最多水的容器/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete the duplicates in a sorted array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think about FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations of a Phone Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find three integers in nums such that the sum is closest to target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find longest palindromic substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find the median of the two sorted arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview多布局显示/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find the single one number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian doll envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8 validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow的迭代方法/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the contiguous subarray which has the largest sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find the largest square area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best Time to Buy and Sell Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The min stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter配置/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge K linked list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The zigzag level order traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add the two non-negative numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find the cycle begins node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort a linked list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build apk with an illegal state exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge overlapping intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The kth permutation sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find the length of the longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The kth largest element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching Rotated array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore  IP address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The sum of three elements is zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse the string word by word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The permutation of string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http缓存/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp源码/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp责任链分析/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android 8.0 apk自动更新的一些坑/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android事件分发源码解析/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM上拉加载RecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView嵌套横向滑动冲突/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/代理/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach与迭代器/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/运行时类型信息/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin逍遥篇/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin觉醒篇/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/导入新项目安装在真机时出现dex.jar is missing错误/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    <script src="/js/GithubRepoWidget.js"></script>
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
