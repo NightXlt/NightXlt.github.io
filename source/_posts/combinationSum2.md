@@ -31,23 +31,6 @@ description: 组合总和II
 
 这道题 是基本回溯法的模板，通过 for 循环控制将所有元素选中，未选中的情况都包含其中，可以说不失为暴力法，但是我们通过剪枝减少了无谓访问，比如通过排序 + 当前 sum > target时，就没必要再往后面走下去了；同为兄弟节点时，出现重复节点时，可跳过这次遍历等剪枝办法。
 
-1. 每个数字可以被重复取
-2. 组合的和为指定值
-
-做回溯题，需要画出递归树进行分析，参考[该链接递归树](https://leetcode-cn.com/problems/combination-sum/solution/hui-su-suan-fa-jian-zhi-python-dai-ma-java-dai-m-2/).
-
-剪枝的情况
-
-1. 对数组进行排序，排序的目的是之后寻找时可以方便剪枝，当 sum+cur > target 时，后面比 cur 还大的数就不需要考虑了。
-2. 当 sum > target 时 或者遍历完数组时，sum < target， 就直接返回
-
-深搜有两种情况
-
-1. 包含自己，毕竟自己也可以重复添加进组合中
-2. 不包含自己，访问下一元素前需要将当前元素从 Deque 中去除。
-
-使用 Dequeue 便于移除队尾元素。
-
 ## Code
 
 ```java
