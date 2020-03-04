@@ -1,6 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Combination Sum II</title>
+    <url>/2020/03/04/combinationSum2/</url>
+    <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><h2 id="https-leetcode-cn-com-problems-combination-sum-ii-submissions"><a href="#https-leetcode-cn-com-problems-combination-sum-ii-submissions" class="headerlink" title="https://leetcode-cn.com/problems/combination-sum-ii/submissions/"></a><a href="https://leetcode-cn.com/problems/combination-sum-ii/submissions/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/combination-sum-ii/submissions/</a></h2><h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>参考：<a href="https://leetcode-cn.com/problems/combination-sum-ii/solution/hui-su-suan-fa-jian-zhi-python-dai-ma-java-dai-m-3/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/combination-sum-ii/solution/hui-su-suan-fa-jian-zhi-python-dai-ma-java-dai-m-3/</a></p>
+<p>和上一道题类似，自己一开始在上一步删除了第二次的 DFS，将第一次的 DFS 操作改为DFS(cur + 1, sum + candidates[cur], lists)，以为这样就可以 O了，candidates = [10,1,2,7,6,1,5], target = 8,。但是这个结果却出现了重复的元素，debug 时发现原来是1 重复出现了。咦， 怎样规避这个重复出现的 1 呢？我想想哈。数组是排过序的，那么重复的元素必然是聚集在一块的，加个 if (cur &gt; 0 &amp;&amp; candidates[cur] == candidates[cur - 1]) return；但这么一加竟然 结果集都为空了。想想也是哈，毕竟我们是进行深搜，如果中间有重复的后面的元素就会得不到遍历了。那还有没其他办法可以解决重复时跳过但不影响遍历后续元素呢。用循环的 <code>continue</code>可以做到。</p>
+<p>在for 循环体内进行剪枝，判断 sum + 当前值是否大于target，大于就进行 return；  如果 (i &gt; start &amp;&amp; candidates[i] == candidates[i - 1]) 是的话我们进行 continue; 对于这个判断也可以从递归树去进行理解。将当前DFS 方法体内的循环体重从 i..length 的节点看为兄弟节点，如果在同一层上出现了重复节点必然会出现重复路径。想想哈，直观感受就是</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">2</span>,<span class="number">5</span>]</span><br><span class="line">      <span class="number">1</span></span><br><span class="line">    /   \</span><br><span class="line">   <span class="number">2</span>    <span class="number">2</span></span><br><span class="line"> /     /</span><br><span class="line"><span class="number">5</span>    <span class="number">5</span></span><br></pre></td></tr></table></figure>
+<p>此外需要注意的就是，for 循环外的两个 if 判断不能颠倒，颠倒了会出现漏解的情况，本题与上题中的if 判断是相反的，上一道题访问第 n.length - 1个元素时，先对自己再进行一次深搜，毕竟可以重复添加嘛，因为<code>下标没有加一</code>也保证了数组访问安全，而且不会出现漏解的情况；本题是访问第 n - 1个元素后，会将 n - 1下标的值加到 sum 里，<code>将下标加一后</code>再深搜一次，优先判断sum 值是否等于，等于就可以添加进res，不满足也会因为其下标达到 n 而直接返回不会出现越界情况。可以简单理解为之所以调整顺序是因为本次深搜时下标加一了。</p>
+<p>这道题 是基本回溯法的模板，通过 for 循环控制将所有元素选中，未选中的情况都包含其中，可以说不失为暴力法，但是我们通过剪枝减少了无谓访问，比如通过排序 + 当前 sum &gt; target时，就没必要再往后面走下去了；同为兄弟节点时，出现重复节点时，可跳过这次遍历等剪枝办法。</p>
+<ol>
+<li>每个数字可以被重复取</li>
+<li>组合的和为指定值</li>
+</ol>
+<p>做回溯题，需要画出递归树进行分析，参考<a href="https://leetcode-cn.com/problems/combination-sum/solution/hui-su-suan-fa-jian-zhi-python-dai-ma-java-dai-m-2/" target="_blank" rel="noopener">该链接递归树</a>.</p>
+<p>剪枝的情况</p>
+<ol>
+<li>对数组进行排序，排序的目的是之后寻找时可以方便剪枝，当 sum+cur &gt; target 时，后面比 cur 还大的数就不需要考虑了。</li>
+<li>当 sum &gt; target 时 或者遍历完数组时，sum &lt; target， 就直接返回</li>
+</ol>
+<p>深搜有两种情况</p>
+<ol>
+<li>包含自己，毕竟自己也可以重复添加进组合中</li>
+<li>不包含自己，访问下一元素前需要将当前元素从 Deque 中去除。</li>
+</ol>
+<p>使用 Dequeue 便于移除队尾元素。</p>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.*</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function">fun <span class="title">combinationSum2</span><span class="params">(candidates: IntArray, target: Int)</span>: List&lt;List&lt;Int&gt;&gt; </span>&#123;</span><br><span class="line">        val res = mutableListOf&lt;List&lt;Int&gt;&gt;()</span><br><span class="line">        Arrays.sort(candidates)</span><br><span class="line">        <span class="function">fun <span class="title">DFS</span><span class="params">(start: Int, sum: Int, lists: Deque&lt;Int&gt;)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (sum == target) &#123;</span><br><span class="line">                val list = lists.toList()</span><br><span class="line">                res.add(list)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (start == candidates.size || sum &gt; target) &#123;</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">for</span> (i in start until candidates.size) &#123;</span><br><span class="line">                <span class="keyword">if</span> (sum + candidates[start] &gt; target) &#123;</span><br><span class="line">                    <span class="keyword">break</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (i &gt; start &amp;&amp; candidates[i] == candidates[i - <span class="number">1</span>]) &#123;</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                &#125;</span><br><span class="line">                lists.add(candidates[i])</span><br><span class="line">                DFS(i + <span class="number">1</span>, sum + candidates[i], lists)</span><br><span class="line">                lists.removeLast()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        DFS(<span class="number">0</span>, <span class="number">0</span>, ArrayDeque())</span><br><span class="line">        <span class="keyword">return</span> res</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>algorithm</category>
+      </categories>
+      <tags>
+        <tag>Leetcode</tag>
+        <tag>回溯</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Combination Sum</title>
     <url>/2020/03/03/combinationSum/</url>
     <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><h2 id="https-leetcode-cn-com-problems-combination-sum"><a href="#https-leetcode-cn-com-problems-combination-sum" class="headerlink" title="https://leetcode-cn.com/problems/combination-sum/"></a><a href="https://leetcode-cn.com/problems/combination-sum/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/combination-sum/</a></h2><h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>题目中关键点：</p>
