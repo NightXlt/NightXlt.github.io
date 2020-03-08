@@ -8,7 +8,7 @@ description: 不重复的全排列
 
 ## Problem description
 
-## https://leetcode-cn.com/problems/permutations-ii/
+https://leetcode-cn.com/problems/permutations-ii/
 
 ## Solution
 

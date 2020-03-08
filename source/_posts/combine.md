@@ -3,7 +3,7 @@ date: 2020-3-6
 tags: [Leetcode,回溯]
 categories: algorithm
 
-description: 组合总和
+description: k 个数的组合
 ---
 
 ## Problem description

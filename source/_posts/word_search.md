@@ -3,7 +3,7 @@ date: 2020-3-7
 tags: [Leetcode,回溯]
 categories: algorithm
 
-description: 最大岛屿数量
+description: 单词搜索
 ---
 
 ## Problem description
