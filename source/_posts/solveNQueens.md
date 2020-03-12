@@ -37,9 +37,14 @@ fun backtrack(row) {
 
 我们需要标识两条对角线上的相应常数值是否有 queen 放置在上面了。我们还需要一个 rows数组 去进行标识某列是否有 queen，不需要去判断同一行是否有两个queen，因为在深搜过程中，i行 j 列添加了 queen 后，便会紧接着深搜下一行的 queen 位置进行放置。如果没找到放置位置，回溯到了 i 行 j 列，在访问 j + 1列前 `注意移除放置在 (i,j)的 queen`。  此外需要一个 queens 数组记录各行queen 的位置便于最后添加 result。
 
+第二天自己回看了提交记录中最优的解决方案，用到了位运算进行判断isUnderAttack 判断。那怎么进行记录呢？使用https://nightxlt.github.io/2020/02/10/Max_Length_Concatenated_String_with_Unique_Characters/
+
+这道题中的位压缩，用一个标志A记录状态，标志A中每一位表示该位置上是否有放置 queen。判断能否放置 queen也相当牛匹， 既然都是某一位是否为 1， 那就三个标志进行分辨右移对应位数（column, row - column + n - 1, row + column，这样一来首位就是标志位。将三个数的首位标志位或一下然后和 1 进行与操作。 结果为1 表明已经放置了 queen。  此外可以通过 xor B进行添加 queen，再次 xor B进行移除 queen。
+
 ## Code
 
-```java
+```kotlin
+Init:
 class Solution {
     private lateinit var rows: BooleanArray
     private lateinit var mainDig: BooleanArray
@@ -105,3 +110,45 @@ class Solution {
     }
 }
 ```
+
+
+
+```kotlin
+Advanced:
+class Solution {
+
+    private var rows = 0
+    private var mainDig = 0
+    private var secDig = 0
+    private var n = 0
+    private var count = 0
+
+    private fun backTrack(row: Int) {
+        for (col in 0 until n) {
+            val mainDigConstants = row - col + n - 1
+            val secDigConstants = row + col
+            if (rows shr col or (mainDig shr mainDigConstants) or (secDig shr secDigConstants) and 1 != 0) {
+                continue
+            }
+            if (row == n - 1) {
+                count++
+                return
+            }
+            rows = rows xor (1 shl col)
+            mainDig = mainDig xor (1 shl mainDigConstants)
+            secDig = secDig xor (1 shl secDigConstants)
+            backTrack(row + 1)
+            rows = rows xor (1 shl col)
+            mainDig = mainDig xor (1 shl mainDigConstants)
+            secDig = secDig xor (1 shl secDigConstants)
+        }
+    }
+
+    fun totalNQueens(n: Int): Int {
+        this.n = n
+        backTrack(0)
+        return count
+    }
+}
+```
+
