@@ -28,7 +28,7 @@ https://leetcode-cn.com/problems/implement-trie-prefix-tree/
 
 ## Code
 
-```java
+```kotlin
 class Trie {
 
     private var children = HashMap<Char, Trie>()

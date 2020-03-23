@@ -63,6 +63,8 @@ private ArrayList<String> getNeighbors(String node, Set<String> dict) {
 while(queue.isNotEmpty() && !isTraversalEnd)
 ```
 
+其中 chars.indics 指的是数组的IntRange, 即 0..size - 1
+
 时间复杂度：$O(k^d)$, 每个节点至多有 k 个邻居节点，树高至多为 d
 
 空间复杂度：$O(N)$, N: 节点个数
@@ -83,7 +85,7 @@ class Solution {
 
         val queue = ArrayDeque<MutableList<String>>()
         queue.add(mutableListOf(beginWord)) //存放每层路径
-        val visited = HashSet<String>() //存储 1.。k-1层访问过的word
+        val visited = HashSet<String>() //存储 1..k-1层访问过的word
         visited.add(beginWord)
         var isTraversalEnd = false //是否找到 endWord
         while (!queue.isEmpty() && !isTraversalEnd) {
@@ -93,7 +95,7 @@ class Solution {
                 val path = queue.poll() //获取到之前的 path
                 val previousWord = path[path.size - 1] //获取上一层的 word
                 val chars = previousWord.toCharArray() 
-                for (i in 0 until chars.size) { //取出每个字符进行暴力遍历
+                for (i in chars.indices) { //取出每个字符进行暴力遍历
                     val temp = chars[i] 
                     for (c in 'a'..'z') {
                         if (c == temp) { //如果 temp 和之前的一致就不需要遍历了，因为其已经在集合中了。
@@ -188,7 +190,7 @@ class Solution {
         val visited = HashSet<String>() //记录本层新增节点（未在 begin 和 end 中出现过）
         for (word in begin) {
             val chars = word.toCharArray()
-            for (i in 0 until chars.size) {
+            for (i in chars.indics) {
                 val temp = chars[i]
                 for (c in 'a'..'z') { //暴力枚举可能的邻居节点
                     if (c == temp) {
