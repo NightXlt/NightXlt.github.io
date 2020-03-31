@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Design Underground System</title>
+    <url>/2020/03/29/UndergroundSystem/</url>
+    <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/design-underground-system/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/design-underground-system/</a></p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>看似普普通通的一道题，在竞赛时死活没刷出来，感觉被其中的映射关系绕糊涂了。结束后看了下题解。AHA，神奇。对于始发站和进站时间使用两个 HashMap 进行记录，key 是 id, 方便在下站时根据 id 站拿到始发站的时间和站名。 之前执拗在使用map 中包 map 的做法将其省略为一个，想着能省下空间，我擦，写起来时太痛苦了。开始想着一个变量写着简便些，结果简便个毛线。对于 time 和 count 也各使用一个 map，这里的 key 就比较 tricky 了，通过将始发站和出站中间拼上一个#作为标识。这样计算平均时也相当方便，直接将startStation # endStation 作为 key，直接取数据即可。这道题指的注意的是这里的 key 设置并不遵循常理单一变量设置，想来 Key 只要唯一即可，真的妙啊。</p>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UndergroundSystem</span> </span>&#123;</span><br><span class="line">    val startStations = HashMap&lt;Int, String&gt;()</span><br><span class="line">    val startT = HashMap&lt;Int, Int&gt;()</span><br><span class="line">    val time = HashMap&lt;String, Int&gt;()</span><br><span class="line">    val count = HashMap&lt;String, Int&gt;()</span><br><span class="line"></span><br><span class="line">    <span class="function">fun <span class="title">checkIn</span><span class="params">(id: Int, stationName: String, t: Int)</span> </span>&#123;</span><br><span class="line">        startStations[id] = stationName</span><br><span class="line">        startT[id] = t</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">fun <span class="title">checkOut</span><span class="params">(id: Int, stationName: String, t: Int)</span> </span>&#123;</span><br><span class="line">        val s = startStations.getOrDefault(id, <span class="string">""</span>) + <span class="string">'#'</span> + stationName</span><br><span class="line">        time[s] = time.getOrDefault(s, <span class="number">0</span>) + t - startT.getOrDefault(id, <span class="number">0</span>)</span><br><span class="line">        count[s] = count.getOrDefault(s, <span class="number">0</span>) + <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">fun <span class="title">getAverageTime</span><span class="params">(startStation: String, endStation: String)</span>: Double </span>&#123;</span><br><span class="line">        val s = <span class="string">"$startStation#$endStation"</span></span><br><span class="line">        <span class="keyword">return</span> time[s]!! * <span class="number">1.0</span> / count[s]!!</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>algorithm</category>
+      </categories>
+      <tags>
+        <tag>Leetcode</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Letter Tile Possibilities</title>
     <url>/2020/03/26/numTilePossibilities/</url>
     <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/letter-tile-possibilities/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/letter-tile-possibilities/</a></p>
@@ -1149,8 +1162,8 @@
         <category>Java源码</category>
       </categories>
       <tags>
-        <tag>源码解析</tag>
         <tag>Java</tag>
+        <tag>源码解析</tag>
       </tags>
   </entry>
   <entry>
