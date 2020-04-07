@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Regular Expression Matching</title>
+    <url>/2020/04/04/REMatch/</url>
+    <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/regular-expression-matching/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/regular-expression-matching/</a></p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><h3 id="回溯法"><a href="#回溯法" class="headerlink" title="回溯法"></a>回溯法</h3><p>首先判断首字母是否相等为 firstMatch, 遇到.时默认为匹配</p>
+<p>如果有*号 ，而模式串 p 只有两个的话，那么*号应该是在 p[1].</p>
+<p>对于*号的处理要么是不将前面的包含其中，要么是继续重复匹配。</p>
+<p>回溯法思路中，自己犯了一个思维惯性，因为 * 在正则中是贪婪匹配的，所以自己进行 dfs 时，直接按最长的来，导致了超时。在做题中，匹配串长度是固定的，我的目标是尽可能块地确认 模式串的与匹配串匹配。遇到 ‘*’ 时应该先匹配不包含前面元素，再进行包含的遍历。</p>
+<p>题解在遍历时是从头至尾进行一一比较进行遍历。遍历过程不断去掉二者已匹配的部分，比较剩余部分直至二者刚好比较结束。则为匹配。我自己在做回溯时，采取的是传统的回溯策略，记录 start 值，通过回溯遍历出 模式串 p 的所有可能字符串与 s 比较，匹配成功则立刻返回。这样的问题是遍历 p 的可能性太耗时，比如遇到.必须遍历 26种可能，这样无疑很耗时。</p>
+<p>回溯法时间复杂度很长就对了。。。官方题解的数字也不知道怎么算出来的</p>
+<h3 id="动态规划"><a href="#动态规划" class="headerlink" title="动态规划"></a>动态规划</h3><p>自己看了官方题解了解到这道题可以使用 dp 缩短时间复杂度为 $O(TP)$( T 和 P 分别表示匹配串和模式串的长度)。</p>
+<p>自己看的是自底向上的解法。</p>
+<p>这个方法就很骚了，我跟着画了图一步步才弄明白。</p>
+<p><img src="/images/rematch_1.png" alt="构造图"></p>
+<p>盗张大佬的图分析下。</p>
+<p>dp 是一个 (s.length + 1) X (p.length + 1)二维数组，最后会解释这里length为啥要加一。dp[i][j] = true 表示 s[i..s.length]与 p[j..p.length]相匹配。</p>
+<p>遇到* 时， dp[i][j] = dp[i][j + 2] || firstMatch &amp;&amp; dp[i + 1][j] 前面优先看不包含的情况， || 后面表示 是重复当前字母的情况。 如果首字母相等，再判断 s[i + 1..s.length] == p[ j..p.length]，这里尤为烧脑 。</p>
+<p>不是* 则直接 dp[i][j] = firstMatch &amp;&amp; dp[i + 1][j + 1]. (s[i] = p[j] &amp;&amp; s[i + 1..s.length] == p[j + 1..p.length])</p>
+<p>最后来解释下为啥dp 的 size 中需要 length + 1，首先我们需要一个初始化位dp[s.length][p.length]默认表示为匹配。 此外初始遍历第 s.length行 是为了*中的 dp[i + 1][j]  符号位传递。不从 s.length 行开始遍历结果是有误的。</p>
+<p>时间复杂度：$O(TP)$ （ T 和 P 分别表示匹配串和模式串的长度）</p>
+<p>空间复杂度：$O(TP)$</p>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">回溯</span><br><span class="line">class Solution &#123;</span><br><span class="line">  	 fun isMatch(s: String, p: String): Boolean &#123;</span><br><span class="line">        if (p.isEmpty()) return s.isEmpty()</span><br><span class="line">        val firstMatch = s.isNotEmpty() &amp;&amp; (s[0] == p[0] || p[0] == &apos;.&apos;)</span><br><span class="line">        if (p.length &gt;= 2 &amp;&amp; p[1] == &apos;*&apos;) &#123;</span><br><span class="line">            return isMatch(s, p.substring(2)) || (firstMatch &amp;&amp; isMatch(s.substring(1), p))</span><br><span class="line">        &#125;</span><br><span class="line">        return firstMatch &amp;&amp; isMatch(s.substring(1), p.substring(1))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">dp</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function">fun <span class="title">isMatch</span><span class="params">(s: String, p: String)</span>: Boolean </span>&#123;</span><br><span class="line">        val dp = Array(s.length + <span class="number">1</span>) &#123; Array(p.length + <span class="number">1</span>) &#123; <span class="keyword">false</span> &#125; &#125;</span><br><span class="line">        dp[s.length][p.length] = <span class="keyword">true</span></span><br><span class="line">        <span class="keyword">for</span> (i in s.length downTo <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (j in p.length - <span class="number">1</span> downTo <span class="number">0</span>) &#123;</span><br><span class="line">                val firstMatch = i &lt; s.length &amp;&amp; (s[i] == p[j] || p[j] == <span class="string">'.'</span>)</span><br><span class="line">                dp[i][j] = <span class="keyword">if</span> (j + <span class="number">1</span> &lt; p.length &amp;&amp; p[j + <span class="number">1</span>] == <span class="string">'*'</span>) &#123;</span><br><span class="line">                    dp[i][j + <span class="number">2</span>] || (firstMatch &amp;&amp; dp[i + <span class="number">1</span>][j])</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    firstMatch &amp;&amp; dp[i + <span class="number">1</span>][j + <span class="number">1</span>]</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> dp[<span class="number">0</span>][<span class="number">0</span>]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>algorithm</category>
+      </categories>
+      <tags>
+        <tag>Leetcode</tag>
+        <tag>动态规划</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Design Underground System</title>
     <url>/2020/03/29/UndergroundSystem/</url>
     <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/design-underground-system/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/design-underground-system/</a></p>
