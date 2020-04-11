@@ -53,6 +53,10 @@ Explanation: The maximum number of envelopes you can Russian doll is 3 ([2,3] =>
 
 做笔记时要认真呀, 做笔记时要认真呀, 做笔记时要认真呀.争取做一道会一类吧
 
+时间复杂度： $O(nlogn)$
+
+空间复杂度： $O(n)$
+
 ## Code
 
 ```java

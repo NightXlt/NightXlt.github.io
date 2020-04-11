@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Pile Box LCCI</title>
+    <url>/2020/04/11/PileBox/</url>
+    <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/pile-box-lcci/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/pile-box-lcci/</a></p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>这是一个三维的 LIS，那可以对其进行排序后降维吧。这个采用 贪心 + 二分的方法是行不通的。老老实实用动态规划解决吧。</p>
+<p>用动规就需要找动规方程，在数组 nums最大递增子序列中 dp[i]表示以 nums[i]结尾的最长上升序列数目。那么动规方程为<br>$$<br>dp[i] = max(dp[j]) + 1\ 其中 0 \le j \lt i,\ 且 nums[j] &lt; nums[i]<br>$$<br>那么 dp 数组中的最大值即为最大递增子序列的的长度， 即LIS(length) =  max(dp[i])。</p>
+<p>讲人话是，我们对于每一个 nums[i], 遍历它前面的元素（0..i - 1），判断其元素值是否比它小，小的话，表明该元素可能是其递增序列中的一员。再对这些小于它的元素取 max 后 + 1得到结果。</p>
+<p>在本题中 dp[i] 表示的是] 以 nums[i]结尾的最长递增子序列的累加和，便于计算箱子的高度。</p>
+<p>时间复杂度： $O(n^2)$</p>
+<p>空间复杂度： $O(n)$</p>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">	<span class="function">fun <span class="title">pileBox</span><span class="params">(box: Array&lt;IntArray&gt;)</span>: Int </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (box.isEmpty()) <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">    Arrays.sort(box) &#123; a, b -&gt; a[<span class="number">2</span>] - b[<span class="number">2</span>] &#125; <span class="comment">// 排序降维</span></span><br><span class="line">    val dp = Array(box.size) &#123; <span class="number">0</span> &#125;</span><br><span class="line">    dp[<span class="number">0</span>] = box[<span class="number">0</span>][<span class="number">2</span>]</span><br><span class="line">    <span class="keyword">var</span> res = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> (i in <span class="number">0</span> until box.size) &#123;</span><br><span class="line">        <span class="keyword">var</span> max = box[i][<span class="number">2</span>]</span><br><span class="line">        <span class="keyword">for</span> (j in <span class="number">0</span> until i)</span><br><span class="line">            <span class="keyword">if</span> (box[i][<span class="number">0</span>] &gt; box[j][<span class="number">0</span>] &amp;&amp; box[i][<span class="number">1</span>] &gt; box[j][<span class="number">1</span>] &amp;&amp; box[i][<span class="number">2</span>] &gt; box[j][<span class="number">2</span>])</span><br><span class="line">                max = kotlin.math.max(max, dp[j] + box[i][<span class="number">2</span>])</span><br><span class="line">        dp[i] = max</span><br><span class="line">        res = kotlin.math.max(max, res)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> res</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>程序员面试金典</category>
+      </categories>
+      <tags>
+        <tag>Leetcode</tag>
+        <tag>动态规划</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Wildcard Matching</title>
     <url>/2020/04/09/wildcardMatching/</url>
     <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/wildcard-matching/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/wildcard-matching/</a></p>
@@ -1216,8 +1235,8 @@
         <category>Java源码</category>
       </categories>
       <tags>
-        <tag>Java</tag>
         <tag>源码解析</tag>
+        <tag>Java</tag>
       </tags>
   </entry>
   <entry>
@@ -2466,6 +2485,8 @@
 <p>举个🌰，[[2，3]，[1，4]，[1，3]，[1，5]] 都进行递增排序后得到 [[1，3]，[1，4]，[1，5]，[2，3]] 这个时候我们对 height 做 LIS会得到 [3, 4, 5]，可是注意哟 套娃是不允许放在宽度相同的套娃上的。为了防止这种情况，排序时宽度递增，宽度相同，高度递减。最后对高度 做 LIS 即可。</p>
 <p>类似的题目还有<a href="https://leetcode-cn.com/problems/circus-tower-lcci/" target="_blank" rel="noopener">马戏团人塔</a></p>
 <p>做笔记时要认真呀, 做笔记时要认真呀, 做笔记时要认真呀.争取做一道会一类吧</p>
+<p>时间复杂度： $O(nlogn)$</p>
+<p>空间复杂度： $O(n)$</p>
 <h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">maxEnvelopes</span><span class="params">(<span class="keyword">int</span>[][] envelopes)</span> </span>&#123;</span><br><span class="line">        Arrays.sort(envelopes, ((o1, o2) -&gt; &#123;</span><br><span class="line">            <span class="keyword">if</span> (o1[<span class="number">0</span>] != o2[<span class="number">0</span>]) &#123;</span><br><span class="line">                <span class="keyword">return</span> o1[<span class="number">0</span>] - o2[<span class="number">0</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> o2[<span class="number">1</span>] - o1[<span class="number">1</span>];<span class="comment">//select lower height</span></span><br><span class="line">        &#125;));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> len = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span>[] h = <span class="keyword">new</span> <span class="keyword">int</span>[envelopes.length];</span><br><span class="line">        <span class="keyword">int</span> low, high ,m;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span>[] envelope : envelopes) &#123;</span><br><span class="line">            low = <span class="number">0</span>;</span><br><span class="line">            high = len - <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">while</span> (low &lt;= high) &#123;</span><br><span class="line">                m = (low + high) / <span class="number">2</span>;</span><br><span class="line">                <span class="keyword">if</span> ((h[m] &lt; envelope[<span class="number">1</span>])) &#123;</span><br><span class="line">                    low = m + <span class="number">1</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    high = m - <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            h[low] = envelope[<span class="number">1</span>];</span><br><span class="line">            <span class="keyword">if</span> (low == len) &#123;</span><br><span class="line">                len++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> len;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
       <categories>
         <category>algorithm</category>
