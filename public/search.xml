@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Verbal Arithmetic Puzzle</title>
+    <url>/2020/05/10/isSolvable/</url>
+    <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/verbal-arithmetic-puzzle/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/verbal-arithmetic-puzzle/</a></p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>SEND + MORE = MONEY，移动下 SEND + MORE - MONEY = 0</p>
+<p>将其转为 10 进制的数字，再合并同类项得到<br>$$<br>S * 1000 + E * 91 - N * 90 + D - M * 9000 - O * 900 + R * 10 - Y = 0<br>$$<br>我们通过 map 记录 字符与系数的对应关系。此外还需要记录首项字符，避免出现前导 0 的情况。</p>
+<p>回溯过程</p>
+<ul>
+<li>判断是否已经遍历光了上述方程中的字符，遍历光了，返回sum是否等于 0</li>
+<li>从<code>未访问的字符</code>中取出一项用来枚举其映射的数字<ul>
+<li>枚举时，如果该数字已被访问或 （映射数字为 0 且 字符为首字符），则跳过</li>
+<li>将该数字标记为使用过防止重复使用</li>
+<li>进行深搜，如果该映射数字能够找到一组解则返回 true</li>
+<li>否则，回溯数字标记状态</li>
+<li>枚举所有数字仍未找到解时，则将该字符添加回<code>未访问字符</code>中,并返回 false</li>
+</ul>
+</li>
+</ul>
+<h2 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">import kotlin.math.pow</span><br><span class="line"></span><br><span class="line">class Solution &#123;</span><br><span class="line">    fun isSolvable(words: Array&lt;String&gt;, result: String): Boolean &#123;</span><br><span class="line">        val map = HashMap&lt;Char, Int&gt;()</span><br><span class="line">        val firstChar = HashSet&lt;Char&gt;()</span><br><span class="line">        for (word in words) &#123;</span><br><span class="line">            firstChar.add(word[0])</span><br><span class="line">            word.forEachIndexed &#123; index, c -&gt;</span><br><span class="line">                map[c] = map.getOrDefault(c, 0) + 10.0.pow(word.length - 1 - index).toInt()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        firstChar.add(result[0])</span><br><span class="line">        result.forEachIndexed &#123; index, c -&gt;</span><br><span class="line">            map[c] = map.getOrDefault(c, 0) - 10.0.pow(result.length - 1 - index).toInt()</span><br><span class="line">        &#125;</span><br><span class="line">        val usedChar = map.keys.toMutableList()</span><br><span class="line">        return dfs(map, firstChar, usedChar, BooleanArray(10), 0)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fun dfs(map: HashMap&lt;Char, Int&gt;, firstChar: HashSet&lt;Char&gt;, usedChar: MutableList&lt;Char&gt;,</span><br><span class="line">            usedDigits: BooleanArray, sum: Int): Boolean &#123;</span><br><span class="line">        if (usedChar.isEmpty()) return sum == 0</span><br><span class="line">        val c = usedChar.removeAt(0)</span><br><span class="line">        for (i in 0..9) &#123;</span><br><span class="line">            if (usedDigits[i]) continue</span><br><span class="line">            if (i == 0 &amp;&amp; firstChar.contains(c)) continue</span><br><span class="line">            usedDigits[i] = true</span><br><span class="line">            if (dfs(map, firstChar, usedChar, usedDigits, sum + map.getOrDefault(c, 0) * i)) return true</span><br><span class="line">            usedDigits[i] = false</span><br><span class="line">        &#125;</span><br><span class="line">        usedChar.add(0, c)</span><br><span class="line">        return false</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>algorithm</category>
+      </categories>
+      <tags>
+        <tag>Leetcode</tag>
+        <tag>回溯</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Stickers to Spell Word</title>
     <url>/2020/04/21/minStickers/</url>
     <content><![CDATA[<h2 id="Problem-description"><a href="#Problem-description" class="headerlink" title="Problem description"></a>Problem description</h2><p><a href="https://leetcode-cn.com/problems/stickers-to-spell-word/" target="_blank" rel="noopener">https://leetcode-cn.com/problems/stickers-to-spell-word/</a></p>
@@ -1311,8 +1339,8 @@
         <category>Java源码</category>
       </categories>
       <tags>
-        <tag>Java</tag>
         <tag>源码解析</tag>
+        <tag>Java</tag>
       </tags>
   </entry>
   <entry>
