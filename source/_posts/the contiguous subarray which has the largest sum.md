@@ -16,13 +16,16 @@ Explanation: [4,-1,2,1] has the largest sum = 6.
 
 ## Solution
 　　这道题曾在剑指Offer上看过解法，有两种解法
-　　1. DP，做过最直观的DP啦~_~   $$ dp[i] =\left\{
-\begin{aligned}
-dp[i - 1] + nums[i] && \ f(i - 1)  >= 0 \&\& i != 0 \\
-nums[i] && \ f[i - 1] < 0 ||  i == 0 \\
-\end{aligned}
-\right.
-$$
+  1. DP，做过最直观的DP啦~_~  
+  $$
+  dp[i] =\left\{
+  \begin{array}{rcl}
+  dp[i - 1] + nums[i]  & & dp(i - 1)  > 0\ \&\& \ i\ != 0\\
+  num[i] & & dp(i-1) < 0\\ 
+  \end{array} \right.
+  $$
+  
+
 　　2. 找规律，记录累加和，当累加和小于0时，说明前面的子数组已构成一个最大和（听着有点别扭哈）。令累加和等于当前值，重新开始累加。
 
 ## Code
