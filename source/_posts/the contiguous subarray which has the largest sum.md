@@ -2,6 +2,7 @@ title:  Find the contiguous subarray which has the largest sum
 date: 2019-1-8
 tags: [Leetcode,字节跳动]
 categories: algorithm
+
 description: 　　
 ---
 ## Problem description
@@ -16,15 +17,20 @@ Explanation: [4,-1,2,1] has the largest sum = 6.
 
 ## Solution
 　　这道题曾在剑指Offer上看过解法，有两种解法
-  1. DP，做过最直观的DP啦~_~  
-  $$
-  dp[i] =\left\{
+  1. DP，做过最直观的DP啦~_~  .dp\[i\]表示以第 i 个数字的子数组结尾的子数组最大和。
+
+     如果 dp\[i - 1\] 小于零，那么加上当前的 nums\[i\] 得到的结果会比第 i 个数字要小。在这种情况下第 i 个数字结尾的子数组就是 nums\[i\] 本身。
+
+     否则以第 i 个数字的子数组结尾的子数组最大和等于i - 1的子数组最大和加上当前 nums\[i\].
+
+$$
+dp[i] =\left\{
   \begin{array}{rcl}
   dp[i - 1] + nums[i]  & & dp(i - 1)  > 0\ \&\& \ i\ != 0\\
   num[i] & & dp(i-1) < 0\\ 
   \end{array} \right.
-  $$
-  
+$$
+
 
 　　2. 找规律，记录累加和，当累加和小于0时，说明前面的子数组已构成一个最大和（听着有点别扭哈）。令累加和等于当前值，重新开始累加。
 

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Night" />
+
+
+
+<meta name="description" content="咦，观察者模式讷">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rxjava订阅解析">
+<meta property="og:url" content="http://yoursite.com/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:description" content="咦，观察者模式讷">
+<meta property="og:image" content="http://yoursite.com/images/RxJava_call_stack_just.png">
+<meta property="og:image" content="http://yoursite.com/images/RxJava_call_stack_just_map.png">
+<meta property="og:image" content="http://yoursite.com/images/RxJava_call_stack_just_map_subscribeOn_observeOn.png">
+<meta property="article:published_time" content="2019-02-28T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-03T08:24:55.862Z">
+<meta property="article:author" content="Night">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="源码解析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/RxJava_call_stack_just.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Rxjava订阅解析 | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" target="_blank" rel="noopener" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" target="_blank" rel="noopener" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" target="_blank" rel="noopener" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" target="_blank" rel="noopener" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%EF%BC%8C%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6/" rel="tag">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/" rel="tag">BFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug%E8%B0%83%E8%AF%95/" rel="tag">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/" rel="tag">DFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/" rel="tag">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/" rel="tag">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/" rel="tag">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/" rel="tag">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/" rel="tag">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/" rel="tag">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/" rel="tag">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/" rel="tag">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BA%BF/" rel="tag">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" rel="tag">位运算</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%91%E6%8C%87Offer/" rel="tag">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" rel="tag">动态规划</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%91%A8%E8%B5%9B/" rel="tag">周赛</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%9E%E6%BA%AF/" rel="tag">回溯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" rel="tag">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E8%8A%82%E8%B7%B3%E5%8A%A8/" rel="tag">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/" rel="tag">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E5%AD%A6/" rel="tag">数学</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%9A%B4%E5%8A%9B/" rel="tag">暴力</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%B7%B1%E6%90%9C/" rel="tag">深搜</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B/" rel="tag">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BC%93%E5%AD%98/" rel="tag">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%85%BE%E8%AE%AF/" rel="tag">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/" rel="tag">自定义View</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%B4%AA%E5%BF%83/" rel="tag">贪心</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%92%E5%BD%92/" rel="tag">递归</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io" target="_blank" rel="noopener">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/" target="_blank" rel="noopener">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/" target="_blank" rel="noopener">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-Rxjava订阅解析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/" class="article-date">
+      <time datetime="2019-02-28T16:00:00.000Z" itemprop="datePublished">2019-03-01</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Rxjava订阅解析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Android%E8%BF%9B%E9%98%B6%E4%B9%8B%E5%85%89/">Android进阶之光</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/" rel="tag">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag">源码解析</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>转自piasy兄的<a href="https://blog.piasy.com/2016/09/15/Understand-RxJava/index.html" target="_blank" rel="noopener">拆RxJava</a></p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><blockquote>
+<p>顺着常用的场景/用例出发，理解整个过程、结构、原理，不要沉迷于细节，先对常用的内容有一个全局的概览，每一块的细节再按需深入。入手新项目也是这个思路。</p>
+</blockquote>
+<p>从四个方面分析Rxjava</p>
+<ul>
+<li>事件流源头（observable）怎么发出数据</li>
+<li>响应者（subscriber）怎么收到数据</li>
+<li>怎么对事件流进行操作（operator/transformer）</li>
+<li>以及整个过程的调度（scheduler）</li>
+</ul>
+<p>以及一些新鲜的词语如</p>
+<ul>
+<li>backpressure</li>
+<li>hook</li>
+</ul>
+<h2 id="demo"><a href="#demo" class="headerlink" title="demo"></a>demo</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="string">"Hello world"</span>)</span><br><span class="line">        .subscribe(word -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">"got "</span> + word + <span class="string">" @ "</span> </span><br><span class="line">                    + Thread.currentThread().getName());</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="订阅过程"><a href="#订阅过程" class="headerlink" title="订阅过程"></a>订阅过程</h2><h3 id="just"><a href="#just" class="headerlink" title="just"></a>just</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// Observable.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Observable&lt;T&gt; <span class="title">just</span><span class="params">(<span class="keyword">final</span> T value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ScalarSynchronousObservable.create(value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ScalarSynchronousObservable.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">ScalarSynchronousObservable&lt;T&gt; <span class="title">create</span><span class="params">(T t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ScalarSynchronousObservable&lt;T&gt;(t);           <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="title">ScalarSynchronousObservable</span><span class="params">(<span class="keyword">final</span> T t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(RxJavaHooks.onCreate(<span class="keyword">new</span> JustOnSubscribe&lt;T&gt;(t))); <span class="comment">// 2</span></span><br><span class="line">    <span class="keyword">this</span>.t = t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>我们创建的是 <code>ScalarSynchronousObservable</code>，一个 <code>Observable</code> 的子类。</li>
+<li>我们先跳过 <code>RxJavaHooks</code>，从名字可以得知它是用来做一些 hook 的工作的，那我们就先认为它什么也不做。所以我们传给父类构造函数的就是 <code>JustOnSubscribe</code>，一个 <code>OnSubscribe</code> 的实现类。</li>
+</ol>
+<p><code>Observable</code> 的构造函数接受一个 <code>OnSubscribe</code>，它是一个回调，会在 <code>Observable#subscribe</code> 中使用，用于通知 <code>observable</code> 自己被订阅, 进入<code>subscribe</code>方法</p>
+<h3 id="subscribe"><a href="#subscribe" class="headerlink" title="subscribe"></a>subscribe</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Subscription <span class="title">subscribe</span><span class="params">(<span class="keyword">final</span> Action1&lt;? <span class="keyword">super</span> T&gt; onNext)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略参数检查代码</span></span><br><span class="line">    Action1&lt;Throwable&gt; onError = </span><br><span class="line">        InternalObservableUtils.ERROR_NOT_IMPLEMENTED;</span><br><span class="line">    Action0 onCompleted = Actions.empty();</span><br><span class="line">    <span class="keyword">return</span> subscribe(<span class="keyword">new</span> ActionSubscriber&lt;T&gt;(onNext, </span><br><span class="line">        onError, onCompleted));                             <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Subscription <span class="title">subscribe</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> T&gt; subscriber)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Observable.subscribe(subscriber, <span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> &lt;T&gt; <span class="function">Subscription <span class="title">subscribe</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> T&gt; subscriber, </span></span></span><br><span class="line"><span class="function"><span class="params">      Observable&lt;T&gt; observable)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略参数检查代码</span></span><br><span class="line">    subscriber.onStart();                                   <span class="comment">// 2</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!(subscriber <span class="keyword">instanceof</span> SafeSubscriber)) &#123;</span><br><span class="line">        subscriber = <span class="keyword">new</span> SafeSubscriber&lt;T&gt;(subscriber);     <span class="comment">// 3</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        RxJavaHooks.onObservableStart(observable, </span><br><span class="line">            observable.onSubscribe).call(subscriber);       <span class="comment">// 4</span></span><br><span class="line">        <span class="keyword">return</span> RxJavaHooks.onObservableReturn(subscriber);  <span class="comment">// 5</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        <span class="comment">// 省略错误处理代码</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+<ol>
+<li>我们首先对传入的 Action 进行包装，包装为 <code>ActionSubscriber</code>，一个 <code>Subscriber</code> 的实现类。</li>
+<li>调用 <code>subscriber.onStart()</code> 通知 <code>subscriber</code> 它已经和 <code>observable</code> 连接起来了。这里我们就知道，<code>onStart()</code> 就是在我们调用 <code>subscribe()</code> 的线程执行的。</li>
+<li>如果传入的 <code>subscriber</code> 不是 <code>SafeSubscriber</code>，那就把它包装为一个 <code>SafeSubscriber</code>。</li>
+<li>我们再次跳过<code>hook</code>，认为它什么也没做，那这里我们调用的其实就是 <code>observable.onSubscribe.call(subscriber)</code>。这里我们就看到了前面提到的 <code>onSubscribe</code> 的使用代码，在我们调用 <code>subscribe()</code> 的线程执行这个回调。</li>
+<li>跳过 <code>hook</code>，那么这里就是直接返回了 <code>subscriber</code>。<code>Subscriber</code> 继承了 <code>Subscription</code>，用于取消订阅。</li>
+</ol>
+<p>但是 Hello world 是怎么被传递到打印的代码里的呢？就在 observable.onSubscribe.call(subscriber) 中。</p>
+<h3 id="OnSubscribe"><a href="#OnSubscribe" class="headerlink" title="OnSubscribe"></a>OnSubscribe</h3><p>在just() 的实现中，我们创建了一个 <code>JustOnSubscribe</code> 吗？这里我们执行的就是它实现的 <code>call()</code> 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ScalarSynchronousObservable.java</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">JustOnSubscribe</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">OnSubscribe</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> T&gt; s)</span> </span>&#123;</span><br><span class="line">        s.setProducer(createProducer(s, value));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> &lt;T&gt; <span class="function">Producer <span class="title">createProducer</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> T&gt; s, T v)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> WeakSingleProducer&lt;T&gt;(s, v);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为 <code>subscriber</code> 设置了一个 <code>WeakSingleProducer</code>。</p>
+<p>在 RxJava 1.x 中，数据都是从 observable push 到 subscriber 的，但要是 observable 发得太快，subscriber 处理不过来，该怎么办？一种办法是，把数据保存起来，但这显然可能导致内存耗尽；另一种办法是，多余的数据来了之后就丢掉，至于丢掉和保留的策略可以按需制定；还有一种办法就是让 subscriber 向 observable 主动请求数据，subscriber 不请求，observable 就不发出数据。它俩相互协调，避免出现过多的数据，而协调的桥梁，就是 producer。producer 的内容这里不展开。</p>
+<h3 id="request"><a href="#request" class="headerlink" title="request"></a>request</h3><p>进入 WeakSingleProducer#request() 的实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ScalarSynchronousObservable.java</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">WeakSingleProducer</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Producer</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">request</span><span class="params">(<span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 省略状态检查代码</span></span><br><span class="line">        Subscriber&lt;? <span class="keyword">super</span> T&gt; a = actual;</span><br><span class="line">        <span class="keyword">if</span> (a.isUnsubscribed()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        T v = value;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            a.onNext(v);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            Exceptions.throwOrReport(e, a, v);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (a.isUnsubscribed()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        a.onCompleted();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>在 request() 中，终于调用了 subscriber 的 onNext() 和 onCompleted()，那么，Hello world 就传递到了我们的 Action 中，并被打印出来了。</p>
+<h3 id="完整过程"><a href="#完整过程" class="headerlink" title="完整过程"></a>完整过程</h3><p><img src="/images/RxJava_call_stack_just.png" alt="rxjava_call_stack"></p>
+<h2 id="操作符"><a href="#操作符" class="headerlink" title="操作符"></a>操作符</h2><p>以map为例<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="string">"Hello world"</span>)</span><br><span class="line">        .map(String::length)</span><br><span class="line">        .subscribe(word -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">"got "</span> + word + <span class="string">" @ "</span></span><br><span class="line">                    + Thread.currentThread().getName());</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure><br>进入map方法</p>
+<h3 id="map"><a href="#map" class="headerlink" title="map"></a>map</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Observable.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> &lt;R&gt; <span class="function">Observable&lt;R&gt; <span class="title">map</span><span class="params">(Func1&lt;? <span class="keyword">super</span> T, ? extends R&gt; func)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> create(<span class="keyword">new</span> OnSubscribeMap&lt;T, R&gt;(<span class="keyword">this</span>, func));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Observable&lt;T&gt; <span class="title">create</span><span class="params">(OnSubscribe&lt;T&gt; f)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Observable&lt;T&gt;(RxJavaHooks.onCreate(f));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> <code>map</code> 的实现采用了 <code>create + OnSubscribe（RxJava #4097）</code>；<br>这里实际上是 <code>OnSubscribeMap</code> 干活了。</p>
+<h3 id="OnSubscribeMap"><a href="#OnSubscribeMap" class="headerlink" title="OnSubscribeMap"></a>OnSubscribeMap</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">OnSubscribeMap</span>&lt;<span class="title">T</span>, <span class="title">R</span>&gt; <span class="keyword">implements</span> <span class="title">OnSubscribe</span>&lt;<span class="title">R</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> Observable&lt;T&gt; source;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">final</span> Func1&lt;? <span class="keyword">super</span> T, ? extends R&gt; transformer;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">OnSubscribeMap</span><span class="params">(Observable&lt;T&gt; source, </span></span></span><br><span class="line"><span class="function"><span class="params">            Func1&lt;? <span class="keyword">super</span> T, ? extends R&gt; transformer)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.source = source;</span><br><span class="line">        <span class="keyword">this</span>.transformer = transformer;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">(<span class="keyword">final</span> Subscriber&lt;? <span class="keyword">super</span> R&gt; o)</span> </span>&#123;</span><br><span class="line">        MapSubscriber&lt;T, R&gt; parent = </span><br><span class="line">            <span class="keyword">new</span> MapSubscriber&lt;T, R&gt;(o, transformer);   <span class="comment">// 1</span></span><br><span class="line">        o.add(parent);                                 <span class="comment">// 2</span></span><br><span class="line">        source.unsafeSubscribe(parent);                <span class="comment">// 3</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>利用传入的 subscriber 以及我们进行转换的 Func1 构造一个 MapSubscriber。</li>
+<li>把一个 subscriber 加入到另一个 subscriber 中，是为了让它们可以一起取消订阅。</li>
+<li>unsafeSubscribe 相较于前面的 subscribe，可想而知就是少了一层 SafeSubscriber 的包装。为什么不要包装？因为我们会在最后调用 Observable#subscribe 时进行包装，只需要包装一次即可。</li>
+</ol>
+<p>转换的代码依然没有出现，它在 MapSubscriber 中。</p>
+<h3 id="MapSubscriber"><a href="#MapSubscriber" class="headerlink" title="MapSubscriber"></a>MapSubscriber</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">MapSubscriber</span>&lt;<span class="title">T</span>, <span class="title">R</span>&gt; <span class="keyword">extends</span> <span class="title">Subscriber</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">final</span> Subscriber&lt;? <span class="keyword">super</span> R&gt; actual;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">final</span> Func1&lt;? <span class="keyword">super</span> T, ? extends R&gt; mapper;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">boolean</span> done;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MapSubscriber</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> R&gt; actual, </span></span></span><br><span class="line"><span class="function"><span class="params">            Func1&lt;? <span class="keyword">super</span> T, ? extends R&gt; mapper)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.actual = actual;</span><br><span class="line">        <span class="keyword">this</span>.mapper = mapper;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(T t)</span> </span>&#123;</span><br><span class="line">        R result;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            result = mapper.call(t);        <span class="comment">// 1</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">            Exceptions.throwIfFatal(ex);</span><br><span class="line">            unsubscribe();</span><br><span class="line">            onError(OnErrorThrowable.addValueAsLastCause(ex, t));</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        actual.onNext(result);              <span class="comment">// 2</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略 onError，onCompleted 和 setProducer</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>MapSubscriber 依然很直观：</p>
+<ol>
+<li>上游每新来一个数据，就用我们给的 <code>mapper</code> 进行数据转换。</li>
+<li>再把转换之后的数据发送给下游。<br>这里要解释一下“上游”和“下游”的概念：按照我们写的代码顺序，just 在 map 的上面，Action1 在 map 的下面，数据从 just 传递到 map 再传递到 Action1，所以对于 map 来说，just 就是上游，Action1 就是下游。数据是从上游（Observable）一路传递到下游（Subscriber）的，<code>请求则相反，从下游传递到上游。</code></li>
+</ol>
+<h3 id="完整过程-1"><a href="#完整过程-1" class="headerlink" title="完整过程"></a>完整过程</h3><p><img src="/images/RxJava_call_stack_just_map.png" alt="enter description here"></p>
+<h2 id="线程调度"><a href="#线程调度" class="headerlink" title="线程调度"></a>线程调度</h2><p>我们所有的过程都是通过函数调用完成的，都在 <code>subscribe</code> 所在的线程执行。<code>RxJava</code> 进行异步非常简单，只需要使用 <code>subscribeOn</code> 和 <code>observeOn</code> 这两个操作符即可。既然它俩都是操作符，那流程上就是和 <code>map</code> 差不多的，这里我们主要关注线程调度的实现原理。<br>demo:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="string">"Hello world"</span>)</span><br><span class="line">        .map(String::length)</span><br><span class="line">        .subscribeOn(Schedulers.computation())</span><br><span class="line">        .observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">        .subscribe(len -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">"got "</span> + len + <span class="string">" @ "</span> </span><br><span class="line">                    + Thread.currentThread().getName());</span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure></p>
+<h3 id="subscribeOn"><a href="#subscribeOn" class="headerlink" title="subscribeOn"></a>subscribeOn</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">subscribeOn</span><span class="params">(Scheduler scheduler)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span> <span class="keyword">instanceof</span> ScalarSynchronousObservable) &#123;</span><br><span class="line">        <span class="keyword">return</span> ((ScalarSynchronousObservable&lt;T&gt;)<span class="keyword">this</span>)</span><br><span class="line">                .scalarScheduleOn(scheduler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> create(<span class="keyword">new</span> OperatorSubscribeOn&lt;T&gt;(<span class="keyword">this</span>, scheduler));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还记得上面的 just 吗？它创建的就是 <code>ScalarSynchronousObservable</code>，但是这个特殊情况我们先跳过，我们看普通的情况：通过 <code>create + OperatorSubscribeOn</code> 实现。</p>
+<h3 id="OperatorSubscribeOn"><a href="#OperatorSubscribeOn" class="headerlink" title="OperatorSubscribeOn"></a>OperatorSubscribeOn</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">OperatorSubscribeOn</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">OnSubscribe</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> Scheduler scheduler;</span><br><span class="line">    <span class="keyword">final</span> Observable&lt;T&gt; source;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">OperatorSubscribeOn</span><span class="params">(Observable&lt;T&gt; source, Scheduler scheduler)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.scheduler = scheduler;</span><br><span class="line">        <span class="keyword">this</span>.source = source;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">(<span class="keyword">final</span> Subscriber&lt;? <span class="keyword">super</span> T&gt; subscriber)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> Worker inner = scheduler.createWorker();</span><br><span class="line">        subscriber.add(inner); <span class="comment">//  1</span></span><br><span class="line"></span><br><span class="line">        inner.schedule(<span class="keyword">new</span> Action0() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">final</span> Thread t = Thread.currentThread();</span><br><span class="line"></span><br><span class="line">                Subscriber&lt;T&gt; s = <span class="keyword">new</span> Subscriber&lt;T&gt;(subscriber) &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(T t)</span> </span>&#123;</span><br><span class="line">                        subscriber.onNext(t); <span class="comment">// 2</span></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            subscriber.onError(e);</span><br><span class="line">                        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                            inner.unsubscribe();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCompleted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            subscriber.onCompleted();</span><br><span class="line">                        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                            inner.unsubscribe();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setProducer</span><span class="params">(<span class="keyword">final</span> Producer p)</span> </span>&#123;</span><br><span class="line">                        subscriber.setProducer(<span class="keyword">new</span> Producer() &#123;</span><br><span class="line">                            <span class="meta">@Override</span></span><br><span class="line">                            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">request</span><span class="params">(<span class="keyword">final</span> <span class="keyword">long</span> n)</span> </span>&#123;</span><br><span class="line">                                <span class="keyword">if</span> (t == Thread.currentThread()) &#123;</span><br><span class="line">                                    p.request(n);<span class="comment">// 3</span></span><br><span class="line">                                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                    inner.schedule(<span class="keyword">new</span> Action0() &#123;</span><br><span class="line">                                        <span class="meta">@Override</span></span><br><span class="line">                                        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                                            p.request(n);<span class="comment">// 4</span></span><br><span class="line">                                        &#125;</span><br><span class="line">                                    &#125;);</span><br><span class="line">                                &#125;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                source.unsafeSubscribe(s);<span class="comment">// 5</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li><code>Worker</code> 也实现了 <code>Subscription</code>，所以可以加入到 <code>Subscriber</code> 中，用于集体取消订阅。</li>
+<li>在匿名 <code>Subscriber</code> 中，收到上游的数据后，转发给下游。</li>
+<li><code>Producer#request</code> 被调用时，如果调用线程就是 <code>worker</code> 的线程（t），就直接把请求转发给上游。</li>
+<li>否则还需要进行一次调度，确保调用上游的 <code>request</code> 一定是在 <code>worker</code> 的线程。</li>
+<li>在 <code>worker</code> 线程中，把自己（匿名 <code>Subscriber</code>）和上游连接起来。</li>
+</ol>
+<p>连接上游（可能会触发请求）、向上游发请求，都是在 worker 的线程上执行的，所以如果上游处理请求的代码没有进行异步操作，那上游的代码就是在 subscribeOn 指定的线程上执行的。这就解释了网上随处可见的一个结论：</p>
+<blockquote>
+<p>subscribeOn 影响它上面的调用执行时所在的线程。</p>
+</blockquote>
+<p>但如果仅仅是记住这么一句话，情况稍微一复杂，就必然蒙圈，所以一定要理解它的工作原理。</p>
+<p>另外关于使用多次调用 subscribeOn 的效果，我们这里也就很清楚了，后面的 subscribeOn 只会改变前面的 subscribeOn 调度操作所在的线程，并不能改变最终被调度的代码执行的线程，但对于中途的代码执行的线程，还是会影响到的。</p>
+<p>在上面的代码中，收到上游发来的数据之后，我们直接发给了下游，并没有进行线程切换，所以 <code>subscribeOn</code> 并不会改变数据向下游传递时的线程，这一工作由它的搭档 <code>observeOn</code> 完成。</p>
+<h3 id="observeOn"><a href="#observeOn" class="headerlink" title="observeOn"></a>observeOn</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">observeOn</span><span class="params">(Scheduler scheduler)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> observeOn(scheduler, RxRingBuffer.SIZE);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">observeOn</span><span class="params">(Scheduler scheduler, </span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">int</span> bufferSize)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> observeOn(scheduler, <span class="keyword">false</span>, bufferSize);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Observable&lt;T&gt; <span class="title">observeOn</span><span class="params">(Scheduler scheduler, </span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">boolean</span> delayError, <span class="keyword">int</span> bufferSize)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span> <span class="keyword">instanceof</span> ScalarSynchronousObservable) &#123;</span><br><span class="line">        <span class="keyword">return</span> ((ScalarSynchronousObservable&lt;T&gt;)<span class="keyword">this</span>)</span><br><span class="line">            .scalarScheduleOn(scheduler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> lift(<span class="keyword">new</span> OperatorObserveOn&lt;T&gt;(scheduler, </span><br><span class="line">        delayError, bufferSize));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> &lt;R&gt; <span class="function">Observable&lt;R&gt; <span class="title">lift</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">final</span> Operator&lt;? extends R, ? <span class="keyword">super</span> T&gt; operator)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> create(<span class="keyword">new</span> OnSubscribeLift&lt;T, R&gt;(onSubscribe, </span><br><span class="line">        operator));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>关注 lift + operator 实现的情况。进入onSubscribeLift</p>
+<h3 id="OnSubscribeLift"><a href="#OnSubscribeLift" class="headerlink" title="OnSubscribeLift"></a>OnSubscribeLift</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">OnSubscribeLift</span>&lt;<span class="title">T</span>, <span class="title">R</span>&gt; </span></span><br><span class="line"><span class="class">      <span class="keyword">implements</span> <span class="title">OnSubscribe</span>&lt;<span class="title">R</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> OnSubscribe&lt;T&gt; parent;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> Operator&lt;? extends R, ? <span class="keyword">super</span> T&gt; operator;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">OnSubscribeLift</span><span class="params">(OnSubscribe&lt;T&gt; parent, </span></span></span><br><span class="line"><span class="function"><span class="params">          Operator&lt;? extends R, ? <span class="keyword">super</span> T&gt; operator)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.parent = parent;</span><br><span class="line">        <span class="keyword">this</span>.operator = operator;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">(Subscriber&lt;? <span class="keyword">super</span> R&gt; o)</span> </span>&#123;</span><br><span class="line">        Subscriber&lt;? <span class="keyword">super</span> T&gt; st = RxJavaHooks</span><br><span class="line">            .onObservableLift(operator).call(o);</span><br><span class="line">        st.onStart();</span><br><span class="line">        parent.call(st);</span><br><span class="line">        <span class="comment">// 省略了异常处理代码</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先对下游 <code>subscriber</code> 用操作符进行处理（跳过 hook），然后通知处理后的 <code>subscriber</code>，它将要和 <code>observable</code> 连接起来了，最后把它和上游连接起来。</p>
+<p>这里并没有线程调度的逻辑，所以我们看 <code>OperatorObserveOn。</code></p>
+<h3 id="OperatorObserveOn"><a href="#OperatorObserveOn" class="headerlink" title="OperatorObserveOn"></a>OperatorObserveOn</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">OperatorObserveOn</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Operator</span>&lt;<span class="title">T</span>, <span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Subscriber&lt;? <span class="keyword">super</span> T&gt; call(Subscriber&lt;? <span class="keyword">super</span> T&gt; child) &#123;</span><br><span class="line">        <span class="keyword">if</span> (scheduler <span class="keyword">instanceof</span> ImmediateScheduler) &#123;</span><br><span class="line">            <span class="comment">// avoid overhead, execute directly</span></span><br><span class="line">            <span class="keyword">return</span> child;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (scheduler <span class="keyword">instanceof</span> TrampolineScheduler) &#123;</span><br><span class="line">            <span class="comment">// avoid overhead, execute directly</span></span><br><span class="line">            <span class="keyword">return</span> child;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ObserveOnSubscriber&lt;T&gt; parent = <span class="keyword">new</span> ObserveOnSubscriber&lt;T&gt;(</span><br><span class="line">                scheduler, child, delayError, bufferSize);</span><br><span class="line">            parent.init();</span><br><span class="line">            <span class="keyword">return</span> parent;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果 <code>scheduler</code> 是 ImmediateScheduler/TrampolineScheduler，就什么也不做，否则就把 subscriber 包装为 <code>ObserveOnSubscriber</code>，看来脏活累活都是 ObserveOnSubscriber 干的了。</p>
+<h3 id="ObserveOnSubscriber"><a href="#ObserveOnSubscriber" class="headerlink" title="ObserveOnSubscriber"></a>ObserveOnSubscriber</h3><p><code>ObserveOnSubscriber</code> 除了负责把向下游发送数据的操作调度到指定的线程，还负责 <code>backpressure</code> 支持，这导致它的实现比较复杂，所以这里只展示和分析最简单的调度功能。完整代码的分析大家可以自行阅读源码，其中还会涉及到串行访问相关的内容<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Observable.create(subscriber -&gt; &#123;</span><br><span class="line">    Worker worker = scheduler.createWorker();</span><br><span class="line">    subscriber.add(worker);</span><br><span class="line"> </span><br><span class="line">    source.unsafeSubscribe(<span class="keyword">new</span> Subscriber&lt;T&gt;(subscriber) &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(T t)</span> </span>&#123;</span><br><span class="line">            worker.schedule(() -&gt; subscriber.onNext(t));</span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">            worker.schedule(() -&gt; subscriber.onError(e));</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCompleted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            worker.schedule(() -&gt; subscriber.onCompleted());</span><br><span class="line">        &#125;            </span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure><br><code>observeOn</code> 调度了每个单独的 <code>subscriber.onXXX()</code> 调用，使得数据向下游传递的时候可以切换到指定的线程。这也同样解释了网上随处可见的另一个结论</p>
+<blockquote>
+<p>observeOn 影响它下面的调用执行时所在的线程。</p>
+</blockquote>
+<h3 id="完整过程-2"><a href="#完整过程-2" class="headerlink" title="完整过程"></a>完整过程</h3><p><img src="/images/RxJava_call_stack_just_map_subscribeOn_observeOn.png" alt="enter description here"></p>
+<h2 id="backpressure"><a href="#backpressure" class="headerlink" title="backpressure"></a>backpressure</h2><p>在前面我们讲 just 时，就已经讲过了 <code>backpressure</code>：</p>
+<blockquote>
+<p>在 RxJava 1.x 中，数据都是从 observable push 到 subscriber 的，但要是 observable 发得太快，subscriber 处理不过来，该怎么办？一种办法是，把数据保存起来，但这显然可能导致内存耗尽；另一种办法是，多余的数据来了之后就丢掉，至于丢掉和保留的策略可以按需制定；还有一种办法就是让 subscriber 向 observable 主动请求数据，subscriber 不请求，observable 就不发出数据。它俩相互协调，避免出现过多的数据，而协调的桥梁，就是 producer。</p>
+</blockquote>
+<p>rxjava2.x的Observable是不存在背压的概念的，背压是下游控制上游流速的一种手段。在rxjava1.x的时代，上游会给下游set一个producer，下游通过producer向上游请求n个数据，这样上游就有记录下游请求了多少个数据，然后下游请求多少个上游就给多少个，这个就是背压。一般来讲，每个节点都有缓存，比如说缓存的大小是64，这个时候下游可以一次性向上游request 64个数据。rxjava1.x的有些操作符不支持背压，也就是说这些操作符不会给下游set一个producer，也就是上游根本不理会下游的请求，一直向下游丢数据，如果下游的缓存爆了，那么下游就会抛出MissingBackpressureException，也就是背压失效了。</p>
+<p>在rxjava2.x时代，上述的背压逻辑全部挪到Flowable里了，所以说Flowable支持背压。而2.x时代的Observable是没有背压的概念的，Observable如果来不及消费会死命的缓存直到OOM，所以rxjava2.x的官方文档里面有讲，大数据流用Flowable，小数据流用Observable。</p>
+<h2 id="Hook"><a href="#Hook" class="headerlink" title="Hook"></a>Hook</h2><p>我们多次遇见了 <code>hook</code>，为了简化逻辑，也多次跳过了 hook，这里我们就看看 hook 有什么用，工作原理是什么。</p>
+<p>利用 hook 我们可以站在“上帝视角”，多种重要的节点上，都有 hook。例如创建 <code>Observable（create）</code>时，有 <code>onCreate</code>，我们可以进行任意想要的操作，记录、修饰、甚至抛出异常；以及和 scheduler 相关的内容，获取 scheduler 时，我们都可以进行想要的操作，例如让 Scheduler.io() 返回立即执行的 scheduler。</p>
+<p>这些内容让我们可以执行高度自定义的操作，其中就包括便于测试。</p>
+<p>其实 hook 的原理并不复杂，在关心的节点（hook point）插桩，让我们可以操控（manipulate）程序在这些节点的行为，至于操控的策略，有一系列函数进行设置、以及清理。</p>
+<p>目前和 hook 相关的内容主要在 RxJavaPlugins 和 RxJavaHooks 这两个类中，后者在 v1.1.7 引入，功能更加强大，使用更加方便。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/">Rxjava订阅解析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2019-03-01, 00:00:00</p>
+        <p><span>最后更新:</span>2020-12-03, 16:24:55</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/" title="Rxjava订阅解析">http://yoursite.com/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/">
+                    ConcurrentHashMap源码简析
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/02/28/%E6%89%8B%E5%8A%BF%E5%AF%86%E7%A0%81%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+                    手势密码源码解析
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#demo"><span class="toc-number">2.</span> <span class="toc-text">demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#订阅过程"><span class="toc-number">3.</span> <span class="toc-text">订阅过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#just"><span class="toc-number">3.1.</span> <span class="toc-text">just</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#subscribe"><span class="toc-number">3.2.</span> <span class="toc-text">subscribe</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OnSubscribe"><span class="toc-number">3.3.</span> <span class="toc-text">OnSubscribe</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#request"><span class="toc-number">3.4.</span> <span class="toc-text">request</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#完整过程"><span class="toc-number">3.5.</span> <span class="toc-text">完整过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#操作符"><span class="toc-number">4.</span> <span class="toc-text">操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#map"><span class="toc-number">4.1.</span> <span class="toc-text">map</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OnSubscribeMap"><span class="toc-number">4.2.</span> <span class="toc-text">OnSubscribeMap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MapSubscriber"><span class="toc-number">4.3.</span> <span class="toc-text">MapSubscriber</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#完整过程-1"><span class="toc-number">4.4.</span> <span class="toc-text">完整过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#线程调度"><span class="toc-number">5.</span> <span class="toc-text">线程调度</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#subscribeOn"><span class="toc-number">5.1.</span> <span class="toc-text">subscribeOn</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OperatorSubscribeOn"><span class="toc-number">5.2.</span> <span class="toc-text">OperatorSubscribeOn</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#observeOn"><span class="toc-number">5.3.</span> <span class="toc-text">observeOn</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OnSubscribeLift"><span class="toc-number">5.4.</span> <span class="toc-text">OnSubscribeLift</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OperatorObserveOn"><span class="toc-number">5.5.</span> <span class="toc-text">OperatorObserveOn</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObserveOnSubscriber"><span class="toc-number">5.6.</span> <span class="toc-text">ObserveOnSubscriber</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#完整过程-2"><span class="toc-number">5.7.</span> <span class="toc-text">完整过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#backpressure"><span class="toc-number">6.</span> <span class="toc-text">backpressure</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Hook"><span class="toc-number">7.</span> <span class="toc-text">Hook</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Rxjava订阅解析　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/" title="上一篇: ConcurrentHashMap源码简析">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/02/28/%E6%89%8B%E5%8A%BF%E5%AF%86%E7%A0%81%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" title="下一篇: 手势密码源码解析">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/countTriplets/">Count Triplets That Can Form Two Arrays of Equal XOR</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/isSolvable/">Verbal Arithmetic Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/minTime/">Minimum Time to Collect All Apples in a Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/21/minStickers/">Stickers to Spell Word</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/19/min_croak/">Minimum Number of Frogs Croaking</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/18/wordBreakII/">Word BreakII</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/15/wordBreaks/">Word Break</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/13/uniquePathsIII/">Unique Paths III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/11/PileBox/">Pile Box LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/09/wildcardMatching/">Wildcard Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/04/REMatch/">Regular Expression Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/29/UndergroundSystem/">Design Underground System</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/26/numTilePossibilities/">Letter Tile Possibilities</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/25/constructArray/">Beautiful Arrangement II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/24/countArrangement/">Beautiful Arrangement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/23/countNumbersWithUniqueDigits/">Count Numbers with Unique Digits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/21/isAdditiveNumber/">Additive Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/17/findeLadder/">Word Ladder II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/14/word_search2/">Word Search II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/13/prefix_tree/">Implement Trie (Prefix Tree)</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/10/solveNQueens/">N-Queens</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/08/partition/">Palindrome Partitioning</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/07/word_search/">Word Search</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/06/combine/">Combination</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/04/combinationSum2/">Combination Sum II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/03/combinationSum/">Combination Sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/permuteUnique/">Permutations II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/rectangle_rotate/">矩形绕原点旋转</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/01/reverseBits/">Reverse Bits LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/26/findNumOfValidWords/">Number of Valid Words for Each Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/25/minFlips/">Minimum Flips to Make a OR b Equal to c</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/23/xorQueries/">XOR Queries of a Subarray</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/22/pyramidTransition/">Pyramid Transition Matrix</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/21/letterCasePermutation/">Letter Case Permutationt</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/20/maxFreq/">Maximum Number of Occurrences of a Substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/maxAbsValExpr/">Maximum of Absolute Value Expression</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/subarrayBitwiseORs/">Bitwise ORs of Subarrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/15/findComplement/">Number complement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/10/Max_Length_Concatenated_String_with_Unique_Characters/">串联字符串的最大长度</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/04/isPowerOfFour/">Power of Four</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/03/totalHammingDistance/">Total Hamming Distance</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/02/Single_Number_III/">Single Number III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Counting_Bits/">Counting Bits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Hexadecimal/">Convert a Number to Hexadecimal</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/%E6%8B%8D%E7%85%A7%EF%BC%8C%E5%9B%BE%E5%86%8C%E9%80%89%E5%8F%96%EF%BC%8C%E6%88%AA%E5%9B%BE%E7%9A%84%E5%BF%83%E8%B7%AF%E5%8E%86%E7%A8%8B/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout%E4%B8%8ELinearLayout%E7%9A%84onMeasure%E6%96%B9%E6%B3%95/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84K%E4%B8%AA%E6%9C%80%E5%A4%A7%E5%85%83%E7%B4%A0/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E5%B7%A6%E6%97%8B%E8%BD%AC%E5%AD%97%E7%AC%A6%E4%B8%B2/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E7%BF%BB%E8%BD%AC%E5%8D%95%E8%AF%8D%E9%A1%BA%E5%BA%8F/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/%E5%92%8C%E4%B8%BAS%E7%9A%84%E8%BF%9E%E7%BB%AD%E6%AD%A3%E6%95%B0%E5%BA%8F%E5%88%97/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/%E5%B9%B3%E8%A1%A1%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%88%A4%E6%96%AD/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus%E8%A7%A3%E6%9E%90/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux%20epoll%E6%A8%A1%E5%9E%8B/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%80%86%E5%BA%8F%E5%AF%B9/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%89%8B%E5%8A%BF%E5%AF%86%E7%A0%81%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%95%B0%E7%BB%84%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E6%95%B0%E5%AD%97/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/%E6%8A%8A%E6%95%B0%E7%BB%84%E6%8E%92%E6%88%90%E6%9C%80%E5%B0%8F%E7%9A%84%E6%95%B0/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO%E4%B8%8EVO%E8%BE%A8%E6%9E%90/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask%20Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread%E5%92%8CIntentService%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap%E7%9A%84%E9%AB%98%E6%95%88%E5%8A%A0%E8%BD%BD/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91%E8%BD%AC%E6%8D%A2%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E5%AF%B9%E8%B1%A1%E6%8B%B7%E8%B4%9D/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E5%92%8C%E4%B8%BA%E6%9F%90%E4%B8%80%E7%89%B9%E5%AE%9A%E5%80%BC%E7%9A%84%E8%B7%AF%E5%BE%84/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid%20%20sequence%20of%20Binary%20Tree%E2%80%98s%20post%20order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View%E7%9A%84%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric%20Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move%200/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller%E3%80%81ScrollTo%E3%80%81ScrollBy%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x,%20n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue%20implement%20stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message%20Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace%20Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/%E6%89%8B%E6%92%95HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder%20Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique%20paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing%20a%20stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray%20code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate%20all%20combinations%20of%20well-formed%20parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find%20the%20maximum%20path%20sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine%20if%20it%20is%20a%20power%20of%20two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger%20Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate%20the%20list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product%20of%20all%20the%20elements%20of%20nums%20except%20nums%5Bi%5D/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/%E7%9B%9B%E6%9C%80%E5%A4%9A%E6%B0%B4%E7%9A%84%E5%AE%B9%E5%99%A8/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder%20Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete%20the%20duplicates%20in%20a%20sorted%20array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think%20about%20FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations%20of%20a%20Phone%20Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find%20three%20integers%20in%20nums%20such%20that%20the%20sum%20is%20closest%20to%20target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find%20longest%20palindromic%20substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find%20the%20median%20of%20the%20two%20sorted%20arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview%E5%A4%9A%E5%B8%83%E5%B1%80%E6%98%BE%E7%A4%BA/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find%20the%20single%20one%20number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian%20doll%20envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8%20validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow%E7%9A%84%E8%BF%AD%E4%BB%A3%E6%96%B9%E6%B3%95/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the%20contiguous%20subarray%20which%20has%20the%20largest%20sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find%20the%20largest%20square%20area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best%20Time%20to%20Buy%20and%20Sell%20Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The%20min%20stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter%E9%85%8D%E7%BD%AE/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge%20K%20linked%20list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The%20zigzag%20level%20order%20traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find%20the%20cycle%20begins%20node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort%20a%20linked%20list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add%20the%20two%20non-negative%20numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build%20apk%20with%20an%20illegal%20state%20exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get%20water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge%20overlapping%20intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The%20kth%20permutation%20sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find%20the%20length%20of%20the%20longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The%20kth%20largest%20element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching%20Rotated%20array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland%20date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify%20path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore%20%20IP%20address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The%20sum%20of%20three%20elements%20is%20zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse%20the%20string%20word%20by%20word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The%20permutation%20of%20string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github%20Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http%E7%BC%93%E5%AD%98/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E6%BA%90%E7%A0%81/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E8%B4%A3%E4%BB%BB%E9%93%BE%E5%88%86%E6%9E%90/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android%208.0%20apk%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM%E4%B8%8A%E6%8B%89%E5%8A%A0%E8%BD%BDRecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView%E5%B5%8C%E5%A5%97%E6%A8%AA%E5%90%91%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/%E4%BB%A3%E7%90%86/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin%E9%80%8D%E9%81%A5%E7%AF%87/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin%E8%A7%89%E9%86%92%E7%AF%87/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/%E5%AF%BC%E5%85%A5%E6%96%B0%E9%A1%B9%E7%9B%AE%E5%AE%89%E8%A3%85%E5%9C%A8%E7%9C%9F%E6%9C%BA%E6%97%B6%E5%87%BA%E7%8E%B0dex.jar%20is%20missing%E9%94%99%E8%AF%AF/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

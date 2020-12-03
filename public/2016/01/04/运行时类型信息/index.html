@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Night" />
+
+
+
+<meta name="description" content="Runtime type identification 运行时类型信息">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTTI">
+<meta property="og:url" content="http://yoursite.com/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:description" content="Runtime type identification 运行时类型信息">
+<meta property="og:image" content="http://yoursite.com/images/RTTI.png">
+<meta property="og:image" content="http://yoursite.com/images/5-2.png">
+<meta property="article:published_time" content="2016-01-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-03T08:24:55.880Z">
+<meta property="article:author" content="Night">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/RTTI.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>RTTI | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" target="_blank" rel="noopener" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" target="_blank" rel="noopener" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" target="_blank" rel="noopener" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" target="_blank" rel="noopener" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%EF%BC%8C%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6/" rel="tag">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/" rel="tag">BFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug%E8%B0%83%E8%AF%95/" rel="tag">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/" rel="tag">DFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/" rel="tag">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/" rel="tag">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/" rel="tag">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/" rel="tag">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/" rel="tag">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/" rel="tag">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/" rel="tag">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/" rel="tag">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BA%BF/" rel="tag">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" rel="tag">位运算</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%91%E6%8C%87Offer/" rel="tag">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" rel="tag">动态规划</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%91%A8%E8%B5%9B/" rel="tag">周赛</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%9E%E6%BA%AF/" rel="tag">回溯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" rel="tag">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E8%8A%82%E8%B7%B3%E5%8A%A8/" rel="tag">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/" rel="tag">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E5%AD%A6/" rel="tag">数学</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%9A%B4%E5%8A%9B/" rel="tag">暴力</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%B7%B1%E6%90%9C/" rel="tag">深搜</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B/" rel="tag">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BC%93%E5%AD%98/" rel="tag">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%85%BE%E8%AE%AF/" rel="tag">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/" rel="tag">自定义View</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%B4%AA%E5%BF%83/" rel="tag">贪心</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%92%E5%BD%92/" rel="tag">递归</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io" target="_blank" rel="noopener">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/" target="_blank" rel="noopener">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/" target="_blank" rel="noopener">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-运行时类型信息" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/" class="article-date">
+      <time datetime="2016-01-03T16:00:00.000Z" itemprop="datePublished">2016-01-04</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      RTTI
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Thinking-in-Java/">Thinking in Java</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="Java中的RTTI"><a href="#Java中的RTTI" class="headerlink" title="Java中的RTTI"></a>Java中的RTTI</h2><p>  RTTI可以在程序运行时发现和使用类型信息；传统的RTTI，在编译期和运行期已经知道了所有的类型。举个栗子，在数组中存放类A的实例，在A对象放入数组中时会进行向上转型为Object，取出时会自动将结果转型为A.在Java中所有的类型转换都是在运行时进行正确性检查的，即在运行时识别一个对象的类型。</p>
+<h2 id="Class对象"><a href="#Class对象" class="headerlink" title="Class对象"></a>Class对象</h2><p>  <code>Class对象</code>是RTTI中的核心,Class对象是一个特殊对象，其包含了与类有关的信息，可创建类的所有的“常规”对象（PS:即通过new出来的对象）。Java通过Class对象执行RTTI。</p>
+<p>  <code>每个类都有一个Class对象</code>，每经编译一个新类时都会产生一个Class对象。JVM通过<code>类加载器子系统</code>来生成该对象。所有的类都是在对其第一次使用时，动态地加载到JVM中。当程序创建第一个对类的静态引用时，就会加载这个类。即使构造方法没有使用static关键字。第一次使用new创建类的新对象也会被当作对类的静态成员的引用。</p>
+<p>  类加载器会首先检查类的Class对象是否已经加载。若未加载，默认的类加载器就会根据类名查找.class文件。一旦类的Class对象被载入内存，它就会被用来创建这个类的所有对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">          Class.forName(<span class="string">"springapp.domain.Product"</span>);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">          e.printStackTrace();</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+<p>  public static Class&lt;?&gt; forName(String className)是Class类的一个static成员。其返回是一个Class对象的引用，该引用对应着传入的className。如果该Product还未被加载就加载它，在加载类Product时，<code>Product的static{}</code>会被执行。如果找不到要加载的类，则会抛出异常ClassNotFoundException。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Class c=Class.forName(<span class="string">"springapp.domain.Product"</span>);</span><br><span class="line">    System.out.println(<span class="string">"ClassName: "</span> + c.getName() + <span class="string">"\nSimpleName: "</span> + c.getSimpleName() + <span class="string">"\nCanonical name: "</span> + c.getCanonicalName());</span><br><span class="line">    Product p= (Product) c.newInstance();<span class="comment">//创建实例</span></span><br><span class="line">&#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">catch</span> (InstantiationException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/RTTI.png" alt="输出结果"></p>
+<p>  其中 class.newInstance()创建的类必须带有默认的构造方法。</p>
+<h3 id="类字面常量"><a href="#类字面常量" class="headerlink" title="类字面常量"></a>类字面常量</h3><p>  类字面变量：用于生成对Class对象的引用。使用方法：类名.class。使用.class创建Class引用时，不会自动地初始化Class对象，其初始化被延迟到对静态方法（构造方法隐式是静态的）或者非常数静态域（即静态变量）进行首次引用时才执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CI</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Random sRandom = <span class="keyword">new</span> Random(<span class="number">47</span>);</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ClassNotFoundException </span>&#123;</span><br><span class="line">        Class initable = I1<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">        System.out.println(<span class="string">"After creating initble ref "</span>);</span><br><span class="line">        System.out.println(I1.sfinal);</span><br><span class="line">        System.out.println(I1.sfinal2);</span><br><span class="line">        Class initable3 = Class.forName(<span class="string">"springapp.domain.I3"</span>);</span><br><span class="line">        System.out.println(<span class="string">"After creating Initable3 ref"</span>);</span><br><span class="line">        System.out.println(I3.sNonfinal);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">I1</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> sfinal = <span class="number">47</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> sfinal2 = CI.sRandom.nextInt(<span class="number">1000</span>);</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"I1"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">I3</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> sNonfinal = <span class="number">74</span>;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"I3"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/5-2.png" alt="输出结果"></p>
+<p>  从输出可以看出，仅使用.class是不会初始化类的引用，而Class.forName立即就对类的引用进行了初始化。如果一个static变量被声明为final常量，那么这个读取这个值也并不需要初始化Class。static fianl 是<code>编译期常量</code>,如果一个static不是final的变量，对其进行访问时，要先进行链接(为静态域分配空间)和初始化(初始化该存储空间)。</p>
+<h3 id="泛化的Class引用"><a href="#泛化的Class引用" class="headerlink" title="泛化的Class引用"></a>泛化的Class引用</h3><p>  泛化的Class引用：使用泛型限定Class对象的类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;Integer&gt; integerClass = <span class="keyword">int</span><span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">  <span class="comment">// integerClass = double.class;非法转换</span></span><br><span class="line">   Class&lt;?&gt; intClass = <span class="keyword">int</span><span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">   intClass = <span class="keyword">double</span><span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">   Class&lt;I1&gt; i=I1<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">   Class&lt;? extends I1&gt; i1 = I1<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">   Class&lt;? <span class="keyword">super</span> I1&gt; i2 = i.getSuperclass();</span><br></pre></td></tr></table></figure>
+<p>  其中Class&lt;?&gt;的?表示通配符，意味着一个非具体的类引用。&lt;? extends A&gt;限定是A的子类，&lt;? super A&gt;限定是A的父类。</p>
+<h3 id="类型转换前先检查"><a href="#类型转换前先检查" class="headerlink" title="类型转换前先检查"></a>类型转换前先检查</h3><p>  (1)强转，通过RTTI保证正确性，如果转换出错抛出ClassCastException</p>
+<p>  (2)转换前先通过A instanceof B/B.isInstance(A)询问 A对象是否从属于B的实例，如果是，再进行转换。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;? extends I1&gt; i1 = I1<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">I1 f = <span class="keyword">new</span> I1();</span><br><span class="line"><span class="keyword">if</span> (f <span class="keyword">instanceof</span> List) &#123;</span><br><span class="line">    System.out.println(<span class="string">"true"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (i1.isInstance(f)) &#123;</span><br><span class="line">    System.out.println(<span class="string">"true"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h3><p>  反射：用来在运行时分析类。</p>
+<p>  反射可用来：</p>
+<ol>
+<li>在运行时分析类</li>
+<li>在运行时查看对象</li>
+<li>实现通用的数组操作代码</li>
+<li>使用Method对象（类比于C++中的函数指针）</li>
+</ol>
+<h4 id="利用反射分析类"><a href="#利用反射分析类" class="headerlink" title="利用反射分析类"></a>利用反射分析类</h4><p>  在reflect包中有三个类Field、Method、Constructor可用来获取类的对应成员变量、方法、构造方法。具体操作如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> reflection;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.*;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReflectionTest</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="comment">// read class name from command line args or user input</span></span><br><span class="line">      String name;</span><br><span class="line">      <span class="keyword">if</span> (args.length &gt; <span class="number">0</span>) name = args[<span class="number">0</span>];</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">      &#123;</span><br><span class="line">         Scanner in = <span class="keyword">new</span> Scanner(System.in);</span><br><span class="line">         System.out.println(<span class="string">"Enter class name (e.g. java.util.Date): "</span>);</span><br><span class="line">         name = in.next();</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">try</span></span><br><span class="line">      &#123;</span><br><span class="line">         <span class="comment">// print class name and superclass name (if != Object)</span></span><br><span class="line">         Class cl = Class.forName(name);</span><br><span class="line">         Class supercl = cl.getSuperclass();</span><br><span class="line">         String modifiers = Modifier.toString(cl.getModifiers());</span><br><span class="line">         <span class="keyword">if</span> (modifiers.length() &gt; <span class="number">0</span>) System.out.print(modifiers + <span class="string">" "</span>);</span><br><span class="line">         System.out.print(<span class="string">"class "</span> + name);</span><br><span class="line">         if (supercl != null &amp;&amp; supercl != Object.class) System.out.print(" extends "</span><br><span class="line">               + supercl.getName());</span><br><span class="line"></span><br><span class="line">         System.out.print(<span class="string">"\n&#123;\n"</span>);</span><br><span class="line">         printConstructors(cl);</span><br><span class="line">         System.out.println();</span><br><span class="line">         printMethods(cl);</span><br><span class="line">         System.out.println();</span><br><span class="line">         printFields(cl);</span><br><span class="line">         System.out.println(<span class="string">"&#125;"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">catch</span> (ClassNotFoundException e)</span><br><span class="line">      &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">      System.exit(<span class="number">0</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Prints all constructors of a class</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> cl a class</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printConstructors</span><span class="params">(Class cl)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      Constructor[] constructors = cl.getDeclaredConstructors();<span class="comment">//获取所有构造方法，如果方法中没有Declared，则不能获取私有构造方法</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (Constructor c : constructors)</span><br><span class="line">      &#123;</span><br><span class="line">         String name = c.getName();</span><br><span class="line">         System.out.print(<span class="string">"   "</span>);</span><br><span class="line">         String modifiers = Modifier.toString(c.getModifiers());</span><br><span class="line">         <span class="keyword">if</span> (modifiers.length() &gt; <span class="number">0</span>) System.out.print(modifiers + <span class="string">" "</span>);         </span><br><span class="line">         System.out.print(name + <span class="string">"("</span>);</span><br><span class="line"></span><br><span class="line">         <span class="comment">// print parameter types</span></span><br><span class="line">         Class[] paramTypes = c.getParameterTypes();</span><br><span class="line">         <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; paramTypes.length; j++)</span><br><span class="line">         &#123;</span><br><span class="line">            <span class="keyword">if</span> (j &gt; <span class="number">0</span>) System.out.print(<span class="string">", "</span>);</span><br><span class="line">            System.out.print(paramTypes[j].getName());</span><br><span class="line">         &#125;</span><br><span class="line">         System.out.println(<span class="string">");"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Prints all methods of a class</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> cl a class</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printMethods</span><span class="params">(Class cl)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      Method[] methods = cl.getDeclaredMethods();<span class="comment">//获取这个类/接口的所有方法</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (Method m : methods)</span><br><span class="line">      &#123;</span><br><span class="line">         Class retType = m.getReturnType();<span class="comment">//获取返回值</span></span><br><span class="line">         String name = m.getName();<span class="comment">//获取方法名</span></span><br><span class="line"></span><br><span class="line">         System.out.print(<span class="string">"   "</span>);</span><br><span class="line">         <span class="comment">// print modifiers, return type and method name</span></span><br><span class="line">         String modifiers = Modifier.toString(m.getModifiers());<span class="comment">//获取方法修饰符</span></span><br><span class="line">         <span class="keyword">if</span> (modifiers.length() &gt; <span class="number">0</span>) System.out.print(modifiers + <span class="string">" "</span>);         </span><br><span class="line">         System.out.print(retType.getName() + <span class="string">" "</span> + name + <span class="string">"("</span>);</span><br><span class="line"></span><br><span class="line">         <span class="comment">// print parameter types</span></span><br><span class="line">         Class[] paramTypes = m.getParameterTypes();<span class="comment">//获取方法参数类型</span></span><br><span class="line">         <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; paramTypes.length; j++)</span><br><span class="line">         &#123;</span><br><span class="line">            <span class="keyword">if</span> (j &gt; <span class="number">0</span>) System.out.print(<span class="string">", "</span>);</span><br><span class="line">            System.out.print(paramTypes[j].getName());</span><br><span class="line">         &#125;</span><br><span class="line">         System.out.println(<span class="string">");"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Prints all fields of a class</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> cl a class</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printFields</span><span class="params">(Class cl)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      Field[] fields = cl.getDeclaredFields();<span class="comment">//获取该类所有成员变量</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (Field f : fields)</span><br><span class="line">      &#123;</span><br><span class="line">         Class type = f.getType();</span><br><span class="line">         String name = f.getName();</span><br><span class="line">         System.out.print(<span class="string">"   "</span>);</span><br><span class="line">         String modifiers = Modifier.toString(f.getModifiers());</span><br><span class="line">         <span class="keyword">if</span> (modifiers.length() &gt; <span class="number">0</span>) System.out.print(modifiers + <span class="string">" "</span>);         </span><br><span class="line">         System.out.println(type.getName() + <span class="string">" "</span> + name + <span class="string">";"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">```  </span><br><span class="line"></span><br><span class="line">  值得注意的是Field、Method、Constructor在使用.get/.set访问时只能获取设置可访问的成员变量，如<span class="keyword">public</span>等，如果想要覆盖访问控制可以调用AccessibleObject.setAccessible(AccessibleObject[],<span class="keyword">boolean</span>);</span><br><span class="line">  </span><br><span class="line">#### 反射编写泛型数组代码</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line"><span class="keyword">package</span> arrays;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.*;</span><br><span class="line"><span class="keyword">import</span> java.util.*;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CopyOfTest</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="keyword">int</span>[] a = &#123; <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span> &#125;;</span><br><span class="line">      a = (<span class="keyword">int</span>[]) goodCopyOf(a, <span class="number">10</span>);</span><br><span class="line">      System.out.println(Arrays.toString(a));</span><br><span class="line"></span><br><span class="line">      String[] b = &#123; <span class="string">"Tom"</span>, <span class="string">"Dick"</span>, <span class="string">"Harry"</span> &#125;;</span><br><span class="line">      b = (String[]) goodCopyOf(b, <span class="number">10</span>);</span><br><span class="line">      System.out.println(Arrays.toString(b));</span><br><span class="line"></span><br><span class="line">      System.out.println(<span class="string">"The following call will generate an exception."</span>);</span><br><span class="line">      b = (String[]) badCopyOf(b, <span class="number">10</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * This method attempts to grow an array by allocating a new array and copying all elements.</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> a the array to grow</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> newLength the new length</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span> a larger array that contains all elements of a. However, the returned array has </span></span><br><span class="line"><span class="comment">    * type Object[], not the same type as a</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> Object[] badCopyOf(Object[] a, <span class="keyword">int</span> newLength) <span class="comment">// not useful</span></span><br><span class="line">  <span class="comment">//一个从一开始就是Object[]的数组是不能够向下转型为其它类型数组的，故需要在一开始创建与原数组类型相同的数组</span></span><br><span class="line">   &#123;</span><br><span class="line">      Object[] newArray = <span class="keyword">new</span> Object[newLength];</span><br><span class="line">      System.arraycopy(a, <span class="number">0</span>, newArray, <span class="number">0</span>, Math.min(a.length, newLength));</span><br><span class="line">      <span class="keyword">return</span> newArray;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * This method grows an array by allocating a new array of the same type and</span></span><br><span class="line"><span class="comment">    * copying all elements.</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> a the array to grow. This can be an object array or a primitive</span></span><br><span class="line"><span class="comment">    * type array</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span> a larger array that contains all elements of a.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">goodCopyOf</span><span class="params">(Object a, <span class="keyword">int</span> newLength)</span> </span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      Class cl = a.getClass();</span><br><span class="line">      <span class="keyword">if</span> (!cl.isArray()) <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">      Class componentType = cl.getComponentType();<span class="comment">//获取数据类型</span></span><br><span class="line">      <span class="keyword">int</span> length = Array.getLength(a);</span><br><span class="line">      Object newArray = Array.newInstance(componentType, newLength);</span><br><span class="line">      System.arraycopy(a, <span class="number">0</span>, newArray, <span class="number">0</span>, Math.min(length, newLength));</span><br><span class="line">      <span class="keyword">return</span> newArray;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="调用任意方法"><a href="#调用任意方法" class="headerlink" title="调用任意方法"></a>调用任意方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> methods;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.*;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MethodTableTest</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception</span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="comment">// get method pointers to the square and sqrt methods</span></span><br><span class="line">      Method square = MethodTableTest.class.getMethod("square", double.class);</span><br><span class="line">      Method sqrt = Math.class.getMethod("sqrt", double.class);//第一个参数为方法名，后面若干变量为方法参数类型</span><br><span class="line"></span><br><span class="line">      <span class="comment">// print tables of x- and y-values</span></span><br><span class="line"></span><br><span class="line">      printTable(<span class="number">1</span>, <span class="number">10</span>, <span class="number">10</span>, square);</span><br><span class="line">      printTable(<span class="number">1</span>, <span class="number">10</span>, <span class="number">10</span>, sqrt);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Returns the square of a number</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> x a number</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@return</span> x squared</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">double</span> <span class="title">square</span><span class="params">(<span class="keyword">double</span> x)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> x * x;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Prints a table with x- and y-values for a method</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> from the lower bound for the x-values</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> to the upper bound for the x-values</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> n the number of rows in the table</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> f a method with a double parameter and double return value</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printTable</span><span class="params">(<span class="keyword">double</span> from, <span class="keyword">double</span> to, <span class="keyword">int</span> n, Method f)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="comment">// print out the method as table header</span></span><br><span class="line">      System.out.println(f);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">double</span> dx = (to - from) / (n - <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">double</span> x = from; x &lt;= to; x += dx)</span><br><span class="line">      &#123;</span><br><span class="line">         <span class="keyword">try</span></span><br><span class="line">         &#123;</span><br><span class="line">            <span class="keyword">double</span> y = (Double) f.invoke(<span class="keyword">null</span>, x);<span class="comment">//调用当前封装在Method中的方法，如果是静态方法，第一个参数隐式参数传null，后面若干变量为方法参数。</span></span><br><span class="line">            System.out.printf(<span class="string">"%10.4f | %10.4f%n"</span>, x, y);</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">catch</span> (Exception e)</span><br><span class="line">         &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/">RTTI</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2016-01-04, 00:00:00</p>
+        <p><span>最后更新:</span>2020-12-03, 16:24:55</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/" title="RTTI">http://yoursite.com/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2016/01/04/Foreach%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/">
+                    Foreach与迭代器
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2015/12/04/Kotlin%E9%80%8D%E9%81%A5%E7%AF%87/">
+                    Kotlin修仙之逍遥篇
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java中的RTTI"><span class="toc-number">1.</span> <span class="toc-text">Java中的RTTI</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Class对象"><span class="toc-number">2.</span> <span class="toc-text">Class对象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#类字面常量"><span class="toc-number">2.1.</span> <span class="toc-text">类字面常量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#泛化的Class引用"><span class="toc-number">2.2.</span> <span class="toc-text">泛化的Class引用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类型转换前先检查"><span class="toc-number">2.3.</span> <span class="toc-text">类型转换前先检查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#反射"><span class="toc-number">2.4.</span> <span class="toc-text">反射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#利用反射分析类"><span class="toc-number">2.4.1.</span> <span class="toc-text">利用反射分析类</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#调用任意方法"><span class="toc-number">2.4.2.</span> <span class="toc-text">调用任意方法</span></a></li></ol></li></ol></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"RTTI　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2016/01/04/Foreach%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/" title="上一篇: Foreach与迭代器">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2015/12/04/Kotlin%E9%80%8D%E9%81%A5%E7%AF%87/" title="下一篇: Kotlin修仙之逍遥篇">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/countTriplets/">Count Triplets That Can Form Two Arrays of Equal XOR</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/isSolvable/">Verbal Arithmetic Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/minTime/">Minimum Time to Collect All Apples in a Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/21/minStickers/">Stickers to Spell Word</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/19/min_croak/">Minimum Number of Frogs Croaking</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/18/wordBreakII/">Word BreakII</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/15/wordBreaks/">Word Break</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/13/uniquePathsIII/">Unique Paths III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/11/PileBox/">Pile Box LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/09/wildcardMatching/">Wildcard Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/04/REMatch/">Regular Expression Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/29/UndergroundSystem/">Design Underground System</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/26/numTilePossibilities/">Letter Tile Possibilities</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/25/constructArray/">Beautiful Arrangement II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/24/countArrangement/">Beautiful Arrangement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/23/countNumbersWithUniqueDigits/">Count Numbers with Unique Digits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/21/isAdditiveNumber/">Additive Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/17/findeLadder/">Word Ladder II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/14/word_search2/">Word Search II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/13/prefix_tree/">Implement Trie (Prefix Tree)</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/10/solveNQueens/">N-Queens</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/08/partition/">Palindrome Partitioning</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/07/word_search/">Word Search</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/06/combine/">Combination</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/04/combinationSum2/">Combination Sum II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/03/combinationSum/">Combination Sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/permuteUnique/">Permutations II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/rectangle_rotate/">矩形绕原点旋转</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/01/reverseBits/">Reverse Bits LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/26/findNumOfValidWords/">Number of Valid Words for Each Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/25/minFlips/">Minimum Flips to Make a OR b Equal to c</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/23/xorQueries/">XOR Queries of a Subarray</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/22/pyramidTransition/">Pyramid Transition Matrix</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/21/letterCasePermutation/">Letter Case Permutationt</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/20/maxFreq/">Maximum Number of Occurrences of a Substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/maxAbsValExpr/">Maximum of Absolute Value Expression</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/subarrayBitwiseORs/">Bitwise ORs of Subarrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/15/findComplement/">Number complement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/10/Max_Length_Concatenated_String_with_Unique_Characters/">串联字符串的最大长度</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/04/isPowerOfFour/">Power of Four</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/03/totalHammingDistance/">Total Hamming Distance</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/02/Single_Number_III/">Single Number III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Counting_Bits/">Counting Bits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Hexadecimal/">Convert a Number to Hexadecimal</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/%E6%8B%8D%E7%85%A7%EF%BC%8C%E5%9B%BE%E5%86%8C%E9%80%89%E5%8F%96%EF%BC%8C%E6%88%AA%E5%9B%BE%E7%9A%84%E5%BF%83%E8%B7%AF%E5%8E%86%E7%A8%8B/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout%E4%B8%8ELinearLayout%E7%9A%84onMeasure%E6%96%B9%E6%B3%95/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84K%E4%B8%AA%E6%9C%80%E5%A4%A7%E5%85%83%E7%B4%A0/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E5%B7%A6%E6%97%8B%E8%BD%AC%E5%AD%97%E7%AC%A6%E4%B8%B2/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E7%BF%BB%E8%BD%AC%E5%8D%95%E8%AF%8D%E9%A1%BA%E5%BA%8F/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/%E5%92%8C%E4%B8%BAS%E7%9A%84%E8%BF%9E%E7%BB%AD%E6%AD%A3%E6%95%B0%E5%BA%8F%E5%88%97/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/%E5%B9%B3%E8%A1%A1%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%88%A4%E6%96%AD/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus%E8%A7%A3%E6%9E%90/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux%20epoll%E6%A8%A1%E5%9E%8B/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%80%86%E5%BA%8F%E5%AF%B9/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%89%8B%E5%8A%BF%E5%AF%86%E7%A0%81%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%95%B0%E7%BB%84%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E6%95%B0%E5%AD%97/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/%E6%8A%8A%E6%95%B0%E7%BB%84%E6%8E%92%E6%88%90%E6%9C%80%E5%B0%8F%E7%9A%84%E6%95%B0/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO%E4%B8%8EVO%E8%BE%A8%E6%9E%90/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask%20Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread%E5%92%8CIntentService%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap%E7%9A%84%E9%AB%98%E6%95%88%E5%8A%A0%E8%BD%BD/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91%E8%BD%AC%E6%8D%A2%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E5%AF%B9%E8%B1%A1%E6%8B%B7%E8%B4%9D/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E5%92%8C%E4%B8%BA%E6%9F%90%E4%B8%80%E7%89%B9%E5%AE%9A%E5%80%BC%E7%9A%84%E8%B7%AF%E5%BE%84/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid%20%20sequence%20of%20Binary%20Tree%E2%80%98s%20post%20order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View%E7%9A%84%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric%20Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move%200/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller%E3%80%81ScrollTo%E3%80%81ScrollBy%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x,%20n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue%20implement%20stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message%20Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace%20Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/%E6%89%8B%E6%92%95HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder%20Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique%20paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing%20a%20stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray%20code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate%20all%20combinations%20of%20well-formed%20parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find%20the%20maximum%20path%20sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine%20if%20it%20is%20a%20power%20of%20two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger%20Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate%20the%20list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product%20of%20all%20the%20elements%20of%20nums%20except%20nums%5Bi%5D/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/%E7%9B%9B%E6%9C%80%E5%A4%9A%E6%B0%B4%E7%9A%84%E5%AE%B9%E5%99%A8/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder%20Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete%20the%20duplicates%20in%20a%20sorted%20array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think%20about%20FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations%20of%20a%20Phone%20Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find%20three%20integers%20in%20nums%20such%20that%20the%20sum%20is%20closest%20to%20target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find%20longest%20palindromic%20substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find%20the%20median%20of%20the%20two%20sorted%20arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview%E5%A4%9A%E5%B8%83%E5%B1%80%E6%98%BE%E7%A4%BA/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find%20the%20single%20one%20number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian%20doll%20envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8%20validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow%E7%9A%84%E8%BF%AD%E4%BB%A3%E6%96%B9%E6%B3%95/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the%20contiguous%20subarray%20which%20has%20the%20largest%20sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find%20the%20largest%20square%20area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best%20Time%20to%20Buy%20and%20Sell%20Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The%20min%20stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter%E9%85%8D%E7%BD%AE/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge%20K%20linked%20list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The%20zigzag%20level%20order%20traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find%20the%20cycle%20begins%20node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort%20a%20linked%20list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add%20the%20two%20non-negative%20numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build%20apk%20with%20an%20illegal%20state%20exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get%20water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge%20overlapping%20intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The%20kth%20permutation%20sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find%20the%20length%20of%20the%20longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The%20kth%20largest%20element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching%20Rotated%20array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland%20date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify%20path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore%20%20IP%20address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The%20sum%20of%20three%20elements%20is%20zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse%20the%20string%20word%20by%20word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The%20permutation%20of%20string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github%20Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http%E7%BC%93%E5%AD%98/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E6%BA%90%E7%A0%81/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E8%B4%A3%E4%BB%BB%E9%93%BE%E5%88%86%E6%9E%90/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android%208.0%20apk%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM%E4%B8%8A%E6%8B%89%E5%8A%A0%E8%BD%BDRecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView%E5%B5%8C%E5%A5%97%E6%A8%AA%E5%90%91%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/%E4%BB%A3%E7%90%86/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin%E9%80%8D%E9%81%A5%E7%AF%87/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin%E8%A7%89%E9%86%92%E7%AF%87/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/%E5%AF%BC%E5%85%A5%E6%96%B0%E9%A1%B9%E7%9B%AE%E5%AE%89%E8%A3%85%E5%9C%A8%E7%9C%9F%E6%9C%BA%E6%97%B6%E5%87%BA%E7%8E%B0dex.jar%20is%20missing%E9%94%99%E8%AF%AF/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>

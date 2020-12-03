@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="Night" />
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="ConcurrentHashMap源码简析">
+<meta property="og:url" content="http://yoursite.com/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/index.html">
+<meta property="og:site_name" content="Night&#39;s blog">
+<meta property="og:image" content="http://yoursite.com/images/jdk_6_concurrent_hashmap.PNG">
+<meta property="og:image" content="http://yoursite.com/images/jdk_8_concurrent_hashmap.PNG">
+<meta property="article:published_time" content="2019-02-28T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-03T08:24:55.852Z">
+<meta property="article:author" content="Night">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="源码解析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/jdk_6_concurrent_hashmap.PNG">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="Night&#39;s blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/img/avatar.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>ConcurrentHashMap源码简析 | Night&#39;s blog</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?78b7e9790ada71496450ca708cc57e36";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Night</a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="https://nightfeng26@gmail.com" target="_blank" rel="noopener" title="Email"></a>
+                            
+                                <a class="fa GitHub" href="https://github.com/NightXlt" target="_blank" rel="noopener" title="GitHub"></a>
+                            
+                                <a class="fa RSS" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" href="http://music.163.com/#/my/m/music/playlist?id=526373324" target="_blank" rel="noopener" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" target="_blank" rel="noopener" title="QQ"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%EF%BC%8C%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6/" rel="tag">Android，消息机制</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/" rel="tag">BFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Bug%E8%B0%83%E8%AF%95/" rel="tag">Bug调试</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/" rel="tag">DFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Function-Programming/" rel="tag">Function Programming</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kotlin/" rel="tag">Kotlin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Leetcode/" rel="tag">Leetcode</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/" rel="tag">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/" rel="tag">View事件体系</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91/" rel="tag">View事件分发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/" rel="tag">View的工作原理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tensorflow/" rel="tag">tensorflow</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BA%BF/" rel="tag">事件总线</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" rel="tag">位运算</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%91%E6%8C%87Offer/" rel="tag">剑指Offer</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" rel="tag">动态规划</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%91%A8%E8%B5%9B/" rel="tag">周赛</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%9E%E6%BA%AF/" rel="tag">回溯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" rel="tag">字符串</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E8%8A%82%E8%B7%B3%E5%8A%A8/" rel="tag">字节跳动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%BC%80%E6%BA%90%E6%A1%86%E6%9E%B6/" rel="tag">开源框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E5%AD%A6/" rel="tag">数学</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%9A%B4%E5%8A%9B/" rel="tag">暴力</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%B7%B1%E6%90%9C/" rel="tag">深搜</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag">源码解析</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B/" rel="tag">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BC%93%E5%AD%98/" rel="tag">缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%85%BE%E8%AE%AF/" rel="tag">腾讯</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/" rel="tag">自定义View</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%B4%AA%E5%BF%83/" rel="tag">贪心</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%92%E5%BD%92/" rel="tag">递归</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://hexo.io" target="_blank" rel="noopener">Hexo</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="https://pages.github.com/" target="_blank" rel="noopener">GitHub</a>
+                    
+                      <a class="main-nav-link switch-friends-link" href="http://moxfive.xyz/" target="_blank" rel="noopener">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">Android Geeker</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Night</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Night</a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="https://nightfeng26@gmail.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/NightXlt" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                                <a class="fa 网易云音乐" target="_blank" href="http://music.163.com/#/my/m/music/playlist?id=526373324" title="网易云音乐"></a>
+                            
+                                <a class="fa QQ" target="_blank" href="http://qm.qq.com/cgi-bin/qm/qr?k=xzAF8AJLQ00oiD7K0u1ESFlAEfsSlojq" title="QQ"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-ConcurrentHashMap源码简析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/" class="article-date">
+      <time datetime="2019-02-28T16:00:00.000Z" itemprop="datePublished">2019-03-01</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ConcurrentHashMap源码简析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/Java%E6%BA%90%E7%A0%81/">Java源码</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag">源码解析</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>本文转自<a href="https://www.bookstack.cn/read/android_interview/java-concurrence-ConcurrentHashMap.md" target="_blank" rel="noopener">ConcurrentHashMap</a></p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>HashMap是我们平时开发过程中用的比较多的集合，但它是非线程安全的，在涉及到多线程并发的情况，进行put操作有可能会引起死循环，导致CPU利用率接近100%。<br>解决方案有Hashtable和Collections.synchronizedMap(hashMap)，不过这两个方案基本上是对读写进行加锁操作，一个线程在读写元素，其余线程必须等待，性能可想而知。所以ConcurrentHashMap应运而生</p>
+<p>因为ConCurrentHashMap在JDK1.8后有较大改进。故分层次讨论</p>
+<h2 id="JDK-1-6分析"><a href="#JDK-1-6分析" class="headerlink" title="JDK 1.6分析"></a>JDK 1.6分析</h2><p>ConcurrentHashMap采用 分段锁的机制，实现并发的更新操作，底层采用数组+链表+红黑树的存储结构。<br>其包含两个核心静态内部类 Segment和HashEntry。</p>
+<ol>
+<li>Segment继承ReentrantLock用来充当锁的角色，每个 Segment 对象守护每个散列映射表的若干个桶。</li>
+<li>HashEntry 用来封装映射表的键 / 值对；</li>
+<li>每个桶是由若干个 HashEntry 对象链接起来的链表。</li>
+</ol>
+<p>一个 ConcurrentHashMap 实例中包含由若干个 Segment 对象组成的数组，下面我们通过一个图来演示一下 ConcurrentHashMap 的结构：<br><img src="/images/jdk_6_concurrent_hashmap.PNG" alt="enter description here"></p>
+<h2 id="JDK1-8分析"><a href="#JDK1-8分析" class="headerlink" title="JDK1.8分析"></a>JDK1.8分析</h2><p>1.8的实现已经抛弃了Segment分段锁机制，利用CAS+Synchronized来保证并发更新的安全，底层依然采用数组+链表+红黑树的存储结构。</p>
+<p><img src="/images/jdk_8_concurrent_hashmap.PNG" alt="enter description here"></p>
+<h3 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h3><p>在开始之前，有些重要的概念需要介绍一下：</p>
+<ol>
+<li><p>table：volatile修饰，默认为null，初始化发生在第一次插入操作，默认大小为16的数组，用来存储Node节点数据，扩容时大小总是2的幂次方。</p>
+</li>
+<li><p>nextTable：volatile修饰，默认为null，扩容时新生成的数组，其大小为原数组的两倍。</p>
+</li>
+<li><p>sizeCtl：volatile修饰，默认为0，用来控制table的初始化和扩容操作，具体应用在后续会体现出来。<br>-1 代表table正在初始化<br>-N 表示有N-1个线程正在进行扩容操作</p>
+</li>
+<li><p>其余情况：<br>1、如果table未初始化，表示table需要初始化的大小。<br>2、如果table初始化完成，表示table的容量，默认是table大小的0.75倍，居然用这个公式算0.75（n - (n &gt;&gt;&gt; 2)）。</p>
+</li>
+<li><p>Node：保存key，value及key的hash值的数据结构。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Node</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; <span class="keyword">implements</span> <span class="title">Map</span>.<span class="title">Entry</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">int</span> hash;</span><br><span class="line">  <span class="keyword">final</span> K key;</span><br><span class="line">  <span class="keyword">volatile</span> V val;</span><br><span class="line">  <span class="keyword">volatile</span> Node&lt;K,V&gt; next;</span><br><span class="line">  ... 省略部分代码</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中value和next都用volatile修饰，保证并发的可见性。</p>
+</li>
+<li>ForwardingNode：一个特殊的Node节点，hash值为-1，其中存储nextTable的引用。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ForwardingNode</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">Node</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> Node&lt;K,V&gt;[] nextTable;</span><br><span class="line">  ForwardingNode(Node&lt;K,V&gt;[] tab) &#123;</span><br><span class="line">      <span class="keyword">super</span>(MOVED, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">      <span class="keyword">this</span>.nextTable = tab;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+只有table发生扩容的时候，ForwardingNode才会发挥作用，作为一个占位符放在table中表示当前节点为null或则已经被移动。</li>
+</ol>
+<h3 id="构造方法"><a href="#构造方法" class="headerlink" title="构造方法"></a>构造方法</h3><p>实例化ConcurrentHashMap时带参数时，如同HashMap一半，会根据参数调整table的大小，假设参数为100，最终会调整成256，确保table的大小总是2的幂次方。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ConcurrentHashMap&lt;String, String&gt; hashMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">100</span>);</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">tableSizeFor</span><span class="params">(<span class="keyword">int</span> c)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = c - <span class="number">1</span>;</span><br><span class="line">    n |= n &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">    n |= n &gt;&gt;&gt; <span class="number">2</span>;</span><br><span class="line">    n |= n &gt;&gt;&gt; <span class="number">4</span>;</span><br><span class="line">    n |= n &gt;&gt;&gt; <span class="number">8</span>;</span><br><span class="line">    n |= n &gt;&gt;&gt; <span class="number">16</span>;</span><br><span class="line">    <span class="keyword">return</span> (n &lt; <span class="number">0</span>) ? <span class="number">1</span> : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>注意，ConcurrentHashMap在构造函数中只会初始化sizeCtl值，并不会直接初始化table，而是延缓到第一次put操作。</p>
+<h3 id="table初始化"><a href="#table初始化" class="headerlink" title="table初始化"></a>table初始化</h3><p>前面已经提到过，table初始化操作会延缓到第一次put行为。但是put是可以并发执行的，Doug Lea是如何实现table只初始化一次的？让我们来看看源码的实现。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Node&lt;K,V&gt;[] initTable() &#123;</span><br><span class="line">    Node&lt;K,V&gt;[] tab; <span class="keyword">int</span> sc;</span><br><span class="line">    <span class="keyword">while</span> ((tab = table) == <span class="keyword">null</span> || tab.length == <span class="number">0</span>) &#123;</span><br><span class="line"><span class="comment">//如果一个线程发现sizeCtl&lt;0，意味着另外的线程执行CAS操作成功，当前线程只需要让出cpu时间片</span></span><br><span class="line">        <span class="keyword">if</span> ((sc = sizeCtl) &lt; <span class="number">0</span>) </span><br><span class="line">            Thread.yield(); <span class="comment">//让出CPU时间片</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (U.compareAndSwapInt(<span class="keyword">this</span>, SIZECTL, sc, -<span class="number">1</span>)) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> ((tab = table) == <span class="keyword">null</span> || tab.length == <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">int</span> n = (sc &gt; <span class="number">0</span>) ? sc : DEFAULT_CAPACITY;</span><br><span class="line">                    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">                    Node&lt;K,V&gt;[] nt = (Node&lt;K,V&gt;[])<span class="keyword">new</span> Node&lt;?,?&gt;[n];</span><br><span class="line">                    table = tab = nt;</span><br><span class="line">                    sc = n - (n &gt;&gt;&gt; <span class="number">2</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                sizeCtl = sc;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> tab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>sizeCtl默认为0，如果ConcurrentHashMap实例化时有传参数，sizeCtl会是一个2的幂次方的值。所以执行第一次put操作的线程会执行Unsafe.compareAndSwapInt方法修改sizeCtl为-1，有且只有一个线程能够修改成功，其它线程通过Thread.yield()让出CPU时间片等待table初始化完成。</p>
+<h3 id="put"><a href="#put" class="headerlink" title="put"></a>put</h3><p>假设table已经初始化完成，put操作采用CAS+synchronized实现并发插入或更新操作，具体实现如下<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> V <span class="title">putVal</span><span class="params">(K key, V value, <span class="keyword">boolean</span> onlyIfAbsent)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span> || value == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">    <span class="keyword">int</span> hash = spread(key.hashCode());</span><br><span class="line">    <span class="keyword">int</span> binCount = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (Node&lt;K,V&gt;[] tab = table;;) &#123;</span><br><span class="line">        Node&lt;K,V&gt; f; <span class="keyword">int</span> n, i, fh;</span><br><span class="line">        <span class="keyword">if</span> (tab == <span class="keyword">null</span> || (n = tab.length) == <span class="number">0</span>)</span><br><span class="line">            tab = initTable();<span class="comment">//初始化table</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((f = tabAt(tab, i = (n - <span class="number">1</span>) &amp; hash)) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (casTabAt(tab, i, <span class="keyword">null</span>, <span class="keyword">new</span> Node&lt;K,V&gt;(hash, key, value, <span class="keyword">null</span>)))</span><br><span class="line">                <span class="keyword">break</span>;                   <span class="comment">// no lock when adding to empty bin</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((fh = f.hash) == MOVED)</span><br><span class="line">            tab = helpTransfer(tab, f);</span><br><span class="line">        ...省略部分代码</span><br><span class="line">    &#125;</span><br><span class="line">    addCount(<span class="number">1L</span>, binCount);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>hash算法:static final int spread(int h) {return (h ^ (h &gt;&gt;&gt; 16)) &amp; HASH_BITS;}</li>
+<li>table中定位索引位置，n是table的大小:  int index = (n - 1) &amp; hash</li>
+<li>获取table中对应索引的元素f。Doug Lea采用Unsafe.getObjectVolatile来获取，也许有人质疑，直接table[index]不可以么，为什么要这么复杂？在java内存模型中，我们已经知道每个线程都有一个工作内存，里面存储着table的副本，虽然table是volatile修饰的，但不能保证线程每次都拿到table中的最新元素，Unsafe.getObjectVolatile可以直接获取指定内存的数据，保证了每次拿到数据都是最新的。</li>
+<li>如果f为null，说明table中这个位置第一次插入元素，利用Unsafe.compareAndSwapObject方法插入Node节点。</li>
+</ol>
+<ul>
+<li>如果CAS成功，说明Node节点已经插入，随后addCount(1L, binCount)方法会检查当前容量是否需要进行扩容。</li>
+<li>如果CAS失败，说明有其它线程提前插入了节点，自旋重新尝试在这个位置插入节点。</li>
+</ul>
+<p>5.如果f的hash值为-1，说明当前f是ForwardingNode节点，意味有其它线程正在扩容，则一起进行扩容操作。<br>6.其余情况把新的Node节点按链表或红黑树的方式插入到合适的位置，这个过程采用同步内置锁synchronized实现并发，代码如下:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (f) &#123;</span><br><span class="line"> <span class="keyword">if</span> (tabAt(tab, i) == f) &#123;</span><br><span class="line">     <span class="keyword">if</span> (fh &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">         binCount = <span class="number">1</span>;</span><br><span class="line">         <span class="keyword">for</span> (Node&lt;K,V&gt; e = f;; ++binCount) &#123;</span><br><span class="line">             K ek;</span><br><span class="line">             <span class="keyword">if</span> (e.hash == hash &amp;&amp;</span><br><span class="line">                 ((ek = e.key) == key ||</span><br><span class="line">                  (ek != <span class="keyword">null</span> &amp;&amp; key.equals(ek)))) &#123;</span><br><span class="line">                 oldVal = e.val;</span><br><span class="line">                 <span class="keyword">if</span> (!onlyIfAbsent)</span><br><span class="line">                     e.val = value;</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             &#125;</span><br><span class="line">             Node&lt;K,V&gt; pred = e;</span><br><span class="line">             <span class="keyword">if</span> ((e = e.next) == <span class="keyword">null</span>) &#123;</span><br><span class="line">                 pred.next = <span class="keyword">new</span> Node&lt;K,V&gt;(hash, key,</span><br><span class="line">                                           value, <span class="keyword">null</span>);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">else</span> <span class="keyword">if</span> (f <span class="keyword">instanceof</span> TreeBin) &#123;</span><br><span class="line">         Node&lt;K,V&gt; p;</span><br><span class="line">         binCount = <span class="number">2</span>;</span><br><span class="line">         <span class="keyword">if</span> ((p = ((TreeBin&lt;K,V&gt;)f).putTreeVal(hash, key,</span><br><span class="line">                                        value)) != <span class="keyword">null</span>) &#123;</span><br><span class="line">             oldVal = p.val;</span><br><span class="line">             <span class="keyword">if</span> (!onlyIfAbsent)</span><br><span class="line">                 p.val = value;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line">         addCount(<span class="number">1L</span>, binCount);</span><br><span class="line">		 <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>在节点f上进行同步，节点插入之前，再次利用tabAt(tab, i) == f判断，防止被其它线程修改。</li>
+<li>与HashMap类似，如果f.hash &gt;= 0，说明f是链表结构的头结点，遍历链表，如果找到对应的node节点，则修改value，否则在链表尾部加入节点。如果f是TreeBin类型节点，说明f是红黑树根节点，则在树结构上遍历元素，更新或增加节点。如果链表中节点数binCount &gt;= TREEIFY_THRESHOLD(默认是8)，则把链表转化为红黑树结构。</li>
+</ol>
+<p>在putval（）最后检测是否需要扩容</p>
+<h3 id="table-扩容"><a href="#table-扩容" class="headerlink" title="table 扩容"></a>table 扩容</h3><p>当table容量不足的时候，即table的元素数量达到容量阈值sizeCtl，需要对table进行扩容。<br>整个扩容分为两部分：</p>
+<p>1 构建一个nextTable，大小为table的两倍。</p>
+<ol start="2">
+<li>把table的数据复制到nextTable中。<br>这两个过程在单线程下实现很简单，但是ConcurrentHashMap是支持并发插入的，扩容操作自然也会有并发的出现，这种情况下，第二步可以支持节点的并发复制，这样性能自然提升不少，但实现的复杂度也上升了一个台阶。</li>
+</ol>
+<p>先看第一步，构建nextTable，毫无疑问，这个过程只能只有单个线程进行nextTable的初始化，具体实现如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">addCount</span><span class="params">(<span class="keyword">long</span> x, <span class="keyword">int</span> check)</span> </span>&#123;</span><br><span class="line">    ... 省略部分代码</span><br><span class="line">    <span class="keyword">if</span> (check &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        Node&lt;K,V&gt;[] tab, nt; <span class="keyword">int</span> n, sc;</span><br><span class="line">        <span class="keyword">while</span> (s &gt;= (<span class="keyword">long</span>)(sc = sizeCtl) &amp;&amp; (tab = table) != <span class="keyword">null</span> &amp;&amp;</span><br><span class="line">               (n = tab.length) &lt; MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            <span class="keyword">int</span> rs = resizeStamp(n);</span><br><span class="line">            <span class="keyword">if</span> (sc &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> ((sc &gt;&gt;&gt; RESIZE_STAMP_SHIFT) != rs || sc == rs + <span class="number">1</span> ||</span><br><span class="line">                    sc == rs + MAX_RESIZERS || (nt = nextTable) == <span class="keyword">null</span> ||</span><br><span class="line">                    transferIndex &lt;= <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">if</span> (U.compareAndSwapInt(<span class="keyword">this</span>, SIZECTL, sc, sc + <span class="number">1</span>))</span><br><span class="line">                    transfer(tab, nt);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (U.compareAndSwapInt(<span class="keyword">this</span>, SIZECTL, sc,</span><br><span class="line">                                         (rs &lt;&lt; RESIZE_STAMP_SHIFT) + <span class="number">2</span>))</span><br><span class="line">                transfer(tab, <span class="keyword">null</span>);</span><br><span class="line">            s = sumCount();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>通过Unsafe.compareAndSwapInt修改sizeCtl值，保证只有一个线程能够初始化nextTable，扩容后的数组长度为原来的两倍，但是容量是原来的1.5</p>
+<p>节点从table移动到nextTable，大体思想是遍历、复制的过程。</p>
+<ol>
+<li>首先根据运算得到需要遍历的次数i，然后利用tabAt方法获得i位置的元素f，初始化一个forwardNode实例fwd。</li>
+<li>如果f == null，则在table中的i位置放入fwd，这个过程是采用Unsafe.compareAndSwapObjectf方法实现的，很巧妙的实现了节点的并发移动。</li>
+<li>否则采用同步内置锁synchronized实现并发</li>
+</ol>
+<ul>
+<li>如果f是链表的头节点，就构造一个反序链表，把他们分别放在nextTable的i和i+n的位置上，移动完成，采用Unsafe.putObjectVolatile方法给table原位置赋值fwd</li>
+<li>如果f是TreeBin节点，也做一个反序处理，并判断是否需要untreeify，把处理的结果分别放在nextTable的i和i+n的位置上，移动完成，同样采用Unsafe.putObjectVolatile方法给table原位置赋值fwd</li>
+</ul>
+<ol start="4">
+<li>遍历过所有的节点以后就完成了复制工作，把table指向nextTable，并更新sizeCtl为新数组大小的0.75倍 ，扩容完成</li>
+</ol>
+<h3 id="get"><a href="#get" class="headerlink" title="get"></a>get</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; e, p; <span class="keyword">int</span> n, eh; K ek;</span><br><span class="line">    <span class="keyword">int</span> h = spread(key.hashCode());</span><br><span class="line">    <span class="keyword">if</span> ((tab = table) != <span class="keyword">null</span> &amp;&amp; (n = tab.length) &gt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">        (e = tabAt(tab, (n - <span class="number">1</span>) &amp; h)) != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((eh = e.hash) == h) &#123;</span><br><span class="line">            <span class="keyword">if</span> ((ek = e.key) == key || (ek != <span class="keyword">null</span> &amp;&amp; key.equals(ek)))</span><br><span class="line">                <span class="keyword">return</span> e.val;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (eh &lt; <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> (p = e.find(h, key)) != <span class="keyword">null</span> ? p.val : <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">while</span> ((e = e.next) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (e.hash == h &amp;&amp;</span><br><span class="line">                ((ek = e.key) == key || (ek != <span class="keyword">null</span> &amp;&amp; key.equals(ek))))</span><br><span class="line">                <span class="keyword">return</span> e.val;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>判断table是否为空，如果为空，直接返回null</li>
+<li>计算key的hash值，并获取指定table中指定位置的Node节点，通过遍历链表或则树结构找到对应的节点，返回value值</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>ConcurrentHashMap 是一个并发散列映射表的实现，它允许完全并发的读取，并且支持给定数量的并发更新。相比于 HashTable 和同步包装器包装的 HashMap，使用一个全局的锁来同步不同线程间的并发访问，同一时间点，只能有一个线程持有锁，也就是说在同一时间点，只能有一个线程能访问容器，这虽然保证多线程间的安全并发访问，但同时也导致对容器的访问变成串行化的了</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/">ConcurrentHashMap源码简析</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Night</a></p>
+        <p><span>发布时间:</span>2019-03-01, 00:00:00</p>
+        <p><span>最后更新:</span>2020-12-03, 16:24:55</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/" title="ConcurrentHashMap源码简析">http://yoursite.com/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/　　作者: Night" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+            <div id="article-nav-newer" class="article-nav-title">
+                <a href="/2019/03/02/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%80%86%E5%BA%8F%E5%AF%B9/">
+                    数组中的逆序对
+                </a>
+            </div>
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/">
+                    Rxjava订阅解析
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JDK-1-6分析"><span class="toc-number">2.</span> <span class="toc-text">JDK 1.6分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JDK1-8分析"><span class="toc-number">3.</span> <span class="toc-text">JDK1.8分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#基础概念"><span class="toc-number">3.1.</span> <span class="toc-text">基础概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#构造方法"><span class="toc-number">3.2.</span> <span class="toc-text">构造方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#table初始化"><span class="toc-number">3.3.</span> <span class="toc-text">table初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#put"><span class="toc-number">3.4.</span> <span class="toc-text">put</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#table-扩容"><span class="toc-number">3.5.</span> <span class="toc-text">table 扩容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#get"><span class="toc-number">3.6.</span> <span class="toc-text">get</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-3 i,
+        .toc-level-3 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"ConcurrentHashMap源码简析　| Night's blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/2019/03/02/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%80%86%E5%BA%8F%E5%AF%B9/" title="上一篇: 数组中的逆序对">
+                <i class="fa fa-angle-left"></i>
+            </a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/" title="下一篇: Rxjava订阅解析">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/countTriplets/">Count Triplets That Can Form Two Arrays of Equal XOR</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/isSolvable/">Verbal Arithmetic Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/05/10/minTime/">Minimum Time to Collect All Apples in a Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/21/minStickers/">Stickers to Spell Word</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/19/min_croak/">Minimum Number of Frogs Croaking</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/18/wordBreakII/">Word BreakII</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/15/wordBreaks/">Word Break</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/13/uniquePathsIII/">Unique Paths III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/11/PileBox/">Pile Box LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/09/wildcardMatching/">Wildcard Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/04/04/REMatch/">Regular Expression Matching</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/29/UndergroundSystem/">Design Underground System</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/26/numTilePossibilities/">Letter Tile Possibilities</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/25/constructArray/">Beautiful Arrangement II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/24/countArrangement/">Beautiful Arrangement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/23/countNumbersWithUniqueDigits/">Count Numbers with Unique Digits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/21/isAdditiveNumber/">Additive Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/17/findeLadder/">Word Ladder II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/14/word_search2/">Word Search II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/13/prefix_tree/">Implement Trie (Prefix Tree)</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/10/solveNQueens/">N-Queens</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/08/partition/">Palindrome Partitioning</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/07/word_search/">Word Search</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/06/combine/">Combination</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/04/combinationSum2/">Combination Sum II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/03/combinationSum/">Combination Sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/permuteUnique/">Permutations II</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/02/rectangle_rotate/">矩形绕原点旋转</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/03/01/reverseBits/">Reverse Bits LCCI</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/26/findNumOfValidWords/">Number of Valid Words for Each Puzzle</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/25/minFlips/">Minimum Flips to Make a OR b Equal to c</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/23/xorQueries/">XOR Queries of a Subarray</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/22/pyramidTransition/">Pyramid Transition Matrix</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/21/letterCasePermutation/">Letter Case Permutationt</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/20/maxFreq/">Maximum Number of Occurrences of a Substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/maxAbsValExpr/">Maximum of Absolute Value Expression</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/19/subarrayBitwiseORs/">Bitwise ORs of Subarrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/15/findComplement/">Number complement</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/10/Max_Length_Concatenated_String_with_Unique_Characters/">串联字符串的最大长度</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/09/MAX_XOR/">Maximum XOR of Two Numbers in an Array</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/04/isPowerOfFour/">Power of Four</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/03/totalHammingDistance/">Total Hamming Distance</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/02/Single_Number_III/">Single Number III</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Counting_Bits/">Counting Bits</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/02/01/Hexadecimal/">Convert a Number to Hexadecimal</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/31/dividend_with_bit/">Divide Two Integers</a></li><li class="post-list-item"><a class="post-list-link" href="/2020/01/30/strStr_kmp/">Implement strStr()</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/19/%E6%8B%8D%E7%85%A7%EF%BC%8C%E5%9B%BE%E5%86%8C%E9%80%89%E5%8F%96%EF%BC%8C%E6%88%AA%E5%9B%BE%E7%9A%84%E5%BF%83%E8%B7%AF%E5%8E%86%E7%A8%8B/">拍照，图册选取，截图的心路历程</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/RelativeLayout%E4%B8%8ELinearLayout%E7%9A%84onMeasure%E6%96%B9%E6%B3%95/">RelativeLayout与LinearLayout的onMeasure方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84K%E4%B8%AA%E6%9C%80%E5%A4%A7%E5%85%83%E7%B4%A0/">数组中的K个最大元素</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/11/Glide%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Glide源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E5%B7%A6%E6%97%8B%E8%BD%AC%E5%AD%97%E7%AC%A6%E4%B8%B2/">左旋转字符串</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/10/%E7%BF%BB%E8%BD%AC%E5%8D%95%E8%AF%8D%E9%A1%BA%E5%BA%8F/">翻转单词顺序</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/09/ContentProvider%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">ContentProvider源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/08/%E5%92%8C%E4%B8%BAS%E7%9A%84%E8%BF%9E%E7%BB%AD%E6%AD%A3%E6%95%B0%E5%BA%8F%E5%88%97/">和为S的连续正数序列</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/06/%E5%B9%B3%E8%A1%A1%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E5%88%A4%E6%96%AD/">平衡二叉树的判断</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/EventBus%E8%A7%A3%E6%9E%90/">EventBus源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Linux%20epoll%E6%A8%A1%E5%9E%8B/">Linux epoll模型</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/03/Retrofit%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Retrofit源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/02/%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%80%86%E5%BA%8F%E5%AF%B9/">数组中的逆序对</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/ConcurrentHashMap%E6%BA%90%E7%A0%81%E7%AE%80%E6%9E%90/">ConcurrentHashMap源码简析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/01/Rxjava%E8%AE%A2%E9%98%85%E8%A7%A3%E6%9E%90/">Rxjava订阅解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%89%8B%E5%8A%BF%E5%AF%86%E7%A0%81%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">手势密码源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/28/%E6%95%B0%E7%BB%84%E4%B8%AD%E9%87%8D%E5%A4%8D%E7%9A%84%E6%95%B0%E5%AD%97/">数组中重复的数字</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/27/%E6%8A%8A%E6%95%B0%E7%BB%84%E6%8E%92%E6%88%90%E6%9C%80%E5%B0%8F%E7%9A%84%E6%95%B0/">把数组排成最小的数</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/DTO%E4%B8%8EVO%E8%BE%A8%E6%9E%90/">DTO与VO辨析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/26/Otto%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/">Otto源码剖析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/AnsyncTask%20Mechanism/">AsyncTask Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/24/HandlerThread%E5%92%8CIntentService%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">HandlerThread和IntentService源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/Bitmap%E7%9A%84%E9%AB%98%E6%95%88%E5%8A%A0%E8%BD%BD/">Bitmap的高效加载</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91%E8%BD%AC%E6%8D%A2%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8/">二叉搜索树转换双向链表</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/23/%E5%AF%B9%E8%B1%A1%E6%8B%B7%E8%B4%9D/">对象拷贝</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/22/%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%AD%E5%92%8C%E4%B8%BA%E6%9F%90%E4%B8%80%E7%89%B9%E5%AE%9A%E5%80%BC%E7%9A%84%E8%B7%AF%E5%BE%84/">二叉树中和为某一特定值的路径</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/Valid%20%20sequence%20of%20Binary%20Tree%E2%80%98s%20post%20order/">Valid  sequence of Binary Tree‘s post order</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/View%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">View的工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/21/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/18/View%E7%9A%84%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">View的滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/15/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">卷积神经网络工作原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/14/Symmetric%20Tree/">Symmetric Tree</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/04/%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/03/ValidSudoku/">ValidSudoku</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Move%200/">Move 0</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/02/Scroller%E3%80%81ScrollTo%E3%80%81ScrollBy%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Scroller、ScrollTo、ScrollBy源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/01/Pow(x,%20n)/">Pow(x, n)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/31/queue%20implement%20stack/">利用队列实现栈</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/30/Message%20Mechanism/">Message Mechanism</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/CountDownLatch/">CountDownLatch的使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/Replace%20Blank/">Replace Blank</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/29/%E6%89%8B%E6%92%95HashMap/">手撕HashMap</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Binder%20Pool/">Binder Pool</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/28/Unique%20paths/">Unique paths</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Climbing%20a%20stair/">Climbing a stair</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/27/Gray%20code/">Gray code</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20permutations/">Find all possible permutations</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/26/Find%20all%20possible%20subsets/">Find all possible subsets</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/25/generate%20all%20combinations%20of%20well-formed%20parentheses/">Generate all combinations of well-formed parentheses.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/24/Find%20the%20maximum%20path%20sum/">Find the maximum path sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/23/Determine%20if%20it%20is%20a%20power%20of%20two/">Determine if it is a power of two</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Messenger%20Again/">Messenger Again</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/20/Rotate%20the%20list/">Rotate the list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/19/Product%20of%20all%20the%20elements%20of%20nums%20except%20nums%5Bi%5D/">Product of all the elements of nums except nums[i]</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/18/%E7%9B%9B%E6%9C%80%E5%A4%9A%E6%B0%B4%E7%9A%84%E5%AE%B9%E5%99%A8/">盛最多水的容器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Binder%20Resolve/">Binder Resolve</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Delete%20the%20duplicates%20in%20a%20sorted%20array/">Delete the duplicates in a sorted array</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/17/Think%20about%20FP/">灵通关于Function thinking的一些思考</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Combinations%20of%20a%20Phone%20Number/">Combinations of a Phone Number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/16/Find%20three%20integers%20in%20nums%20such%20that%20the%20sum%20is%20closest%20to%20target/">Find three integers in nums such that the sum is closest to target</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/15/Find%20longest%20palindromic%20substring/">Find longest palindromic substring</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Find%20the%20median%20of%20the%20two%20sorted%20arrays/">Find the median of the two sorted arrays</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/14/Recylerview%E5%A4%9A%E5%B8%83%E5%B1%80%E6%98%BE%E7%A4%BA/">Recylerview多布局显示</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/13/Find%20the%20single%20one%20number/">Find the single one number</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/10/Russian%20doll%20envelopes/">Russian doll envelopes</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/09/UTF-8%20validation/">UTF-8 validation</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/Tensorflow%E7%9A%84%E8%BF%AD%E4%BB%A3%E6%96%B9%E6%B3%95/">Tensorflow的迭代方法</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/08/the%20contiguous%20subarray%20which%20has%20the%20largest%20sum/">Find the contiguous subarray which has the largest sum</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/Find%20the%20largest%20square%20area/">Find the largest square area</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/07/LRU/">LRU</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/Best%20Time%20to%20Buy%20and%20Sell%20Stock/">Best Time to Buy and Sell Stock</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/06/The%20min%20stack/">The min stack</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Jupyter%E9%85%8D%E7%BD%AE/">Jupyter配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/LCA/">Find the lowest common ancestor (LCA)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/Merge%20K%20linked%20list/">Merge K linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/05/The%20zigzag%20level%20order%20traversal/">The zigzag level order traversal</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Find%20the%20cycle%20begins%20node/">Find  the cycle begins node</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Sort%20a%20linked%20list/">Sort a linked list</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/04/Add%20the%20two%20non-negative%20numbers/">Add the two non-negative numbers</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Build%20apk%20with%20an%20illegal%20state%20exception/">android studio build成功，build app时报illegalStateException</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/03/Get%20water/">Get water</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/Merge%20overlapping%20intervals/">Merge overlapping intervals</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/02/The%20kth%20permutation%20sequence/">The kth permutation sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/DualPivotSort/">DualPivotSort</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/Find%20the%20length%20of%20the%20longest/">Find the length of the longest consecutive elements sequence.</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/01/01/The%20kth%20largest%20element/">The kth largest element</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/Searching%20Rotated%20array/">Searching Rotated array</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/31/maxAreaOfIsland%20date/">maxAreaOfIsland</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Simplify%20path/">Simplify path</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/Restore%20%20IP%20address/">Restore  IP address</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/30/The%20sum%20of%20three%20elements%20is%20zero/">The sum of three elements is zero</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/29/Reverse%20the%20string%20word%20by%20word/">Reverse the string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/28/The%20permutation%20of%20string/">The permutation of string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/27/LongestCommonPrefix/">The longest common prefix string</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/24/LongestSubString/">The longest substring without repeating characters.</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/12/Github%20Gist/">Github Gist入坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/Http%E7%BC%93%E5%AD%98/">Http缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E6%BA%90%E7%A0%81/">OKHttp源码</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/23/OKHttp%E8%B4%A3%E4%BB%BB%E9%93%BE%E5%88%86%E6%9E%90/">OKHttp责任链分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/09/06/Android%208.0%20apk%E8%87%AA%E5%8A%A8%E6%9B%B4%E6%96%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/">Android 8.0 apk自动更新的一些坑</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/08/20/Android%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">Android事件分发源码解析</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/06/06/IM%E4%B8%8A%E6%8B%89%E5%8A%A0%E8%BD%BDRecylerView/">关于IM上拉加载RecylerView闪烁至错误位置</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/09/RecylerView%E5%B5%8C%E5%A5%97%E6%A8%AA%E5%90%91%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">RecylerView中嵌套横向滑动冲突</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/23/%E4%BB%A3%E7%90%86/">代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/Foreach%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/">Foreach与迭代器</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/04/%E8%BF%90%E8%A1%8C%E6%97%B6%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF/">RTTI</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/04/Kotlin%E9%80%8D%E9%81%A5%E7%AF%87/">Kotlin修仙之逍遥篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/03/Kotlin%E8%A7%89%E9%86%92%E7%AF%87/">Kotlin修仙之觉醒篇</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/03/%E5%AF%BC%E5%85%A5%E6%96%B0%E9%A1%B9%E7%9B%AE%E5%AE%89%E8%A3%85%E5%9C%A8%E7%9C%9F%E6%9C%BA%E6%97%B6%E5%87%BA%E7%8E%B0dex.jar%20is%20missing%E9%94%99%E8%AF%AF/">dx.jar is missing</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2015-2020 Night
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+    
+<script src="/js/GithubRepoWidget.js"></script>
+
+
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script src="//cdn.bootcss.com/mathjax/2.6.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+             github: ".github-widget a", 
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+             friends: "#js-friends a", 
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+    <script>
+        var originTitle = document.title;
+        var titleTime;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                document.title = "(つェ⊂) 我藏好了哦~ " + originTitle;
+                clearTimeout(titleTime);
+            }
+            else {
+                document.title = "(*´∇｀*) 被你发现啦~ " + originTitle;
+                titleTime = setTimeout(function() {
+                    document.title = originTitle;
+                }, 2000);
+            }
+        })
+    </script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
