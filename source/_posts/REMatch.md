@@ -44,7 +44,7 @@ dp 是一个 (s.length + 1) X (p.length + 1)二维数组，最后会解释这里
 
 不是\* 则直接 dp[i]\[j] = firstMatch && dp[i + 1]\[j + 1]. (s[i] = p[j] && s[i + 1..s.length] == p[j + 1..p.length])
 
-最后来解释下为啥dp 的 size 中需要 length + 1，首先我们需要一个初始化位dp[s.length]\[p.length]默认表示为匹配。 此外初始遍历第 s.length行 是为了\*中的 dp[i + 1]\[j]  符号位传递。不从 s.length 行开始遍历结果是有误的。
+最后来解释下为啥dp 的 size 中需要 length + 1，最后的一个空行/空列表示 当前匹配串为空串，模式串为空串。所以理所当然 dp\[s.length\][j.length] = true. 表示空串 = 空串。 同理通配符的 dp\[0\]\[0\]=true 也是因为这个原因。 考虑匹配串为空串与模式串其余字符的匹配情况呀。
 
 时间复杂度：$O(TP)$ （ T 和 P 分别表示匹配串和模式串的长度）
 
