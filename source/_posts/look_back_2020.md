@@ -2,7 +2,7 @@
 
 title: 2020回顾
 date: 2021-1-1
-tags: [年终终结]
+tags: [年终总结]
 categories: review
 
 description: 舍弃，成长
